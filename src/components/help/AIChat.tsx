@@ -131,7 +131,9 @@ const AIChat = ({ onBack }: AIChatProps) => {
       setSelectedImage(null);
     } catch (error) {
       console.error('AI Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Ismeretlen hiba történt';
+      const errorMessage = error instanceof Error && error.message.includes('429') 
+          ? 'Az AI szolgáltatás átmenetileg nem elérhető a nagy terhelés miatt. Kérjük, próbálja újra néhány perc múlva.'
+          : error instanceof Error ? error.message : 'Ismeretlen hiba történt';
       toast.error(`Hiba történt: ${errorMessage}`);
 
       const errorResponse: Message = {
