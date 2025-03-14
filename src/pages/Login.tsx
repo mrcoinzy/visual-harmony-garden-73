@@ -49,7 +49,7 @@ const Login = () => {
       console.log(data);
       
       toast.success('Sikeres bejelentkezés!');
-      navigate('/');
+      navigate('/dashboard');
     } catch (error) {
       toast.error('Sikertelen bejelentkezés. Kérjük, ellenőrizze adatait.');
       console.error(error);
