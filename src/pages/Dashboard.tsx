@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Home, Settings, MessageSquare, HelpCircle, Bell, Wrench, User, History } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -32,22 +32,26 @@ const navigationItems = [
   { 
     icon: Home, 
     label: 'Főoldal', 
-    href: '#dashboard' 
+    href: '#dashboard',
+    id: 'dashboard'
   },
   { 
     icon: MessageSquare, 
     label: 'Üzenetek', 
-    href: '#messages' 
+    href: '#messages',
+    id: 'messages'
   },
   { 
     icon: History, 
     label: 'Előzmények', 
-    href: '#history' 
+    href: '#history',
+    id: 'history' 
   },
   { 
     icon: Bell, 
     label: 'Értesítések', 
     href: '#notifications',
+    id: 'notifications',
     badge: '3'
   },
 ];
@@ -57,12 +61,14 @@ const serviceItems = [
   { 
     icon: Wrench, 
     label: 'Szolgáltatások', 
-    href: '#services' 
+    href: '#services',
+    id: 'services'
   },
   { 
     icon: HelpCircle, 
     label: 'Segítséget kérek', 
     href: '#help',
+    id: 'help',
     highlighted: true
   },
 ];
@@ -72,12 +78,14 @@ const settingsItems = [
   { 
     icon: User, 
     label: 'Profilom', 
-    href: '#profile' 
+    href: '#profile',
+    id: 'profile'
   },
   { 
     icon: Settings, 
     label: 'Beállítások', 
-    href: '#settings' 
+    href: '#settings',
+    id: 'settings'
   },
 ];
 
@@ -96,8 +104,8 @@ const DashboardSidebar = ({ activePage, onNavigate }) => {
     navigate('/login');
   };
 
-  const handleMenuClick = (href) => {
-    onNavigate(href.replace('#', ''));
+  const handleMenuClick = (href, id) => {
+    onNavigate(id);
   };
 
   return (
@@ -127,8 +135,8 @@ const DashboardSidebar = ({ activePage, onNavigate }) => {
                   <SidebarMenuButton 
                     asChild 
                     tooltip={item.label}
-                    isActive={activePage === item.href.replace('#', '')}
-                    onClick={() => handleMenuClick(item.href)}
+                    isActive={activePage === item.id}
+                    onClick={() => handleMenuClick(item.href, item.id)}
                   >
                     <a href={item.href} className="relative">
                       <item.icon />
@@ -157,8 +165,8 @@ const DashboardSidebar = ({ activePage, onNavigate }) => {
                   <SidebarMenuButton 
                     asChild 
                     tooltip={item.label}
-                    isActive={activePage === item.href.replace('#', '')}
-                    onClick={() => handleMenuClick(item.href)}
+                    isActive={activePage === item.id}
+                    onClick={() => handleMenuClick(item.href, item.id)}
                     className={item.highlighted ? "bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90" : ""}
                   >
                     <a href={item.href}>
@@ -183,8 +191,8 @@ const DashboardSidebar = ({ activePage, onNavigate }) => {
                   <SidebarMenuButton 
                     asChild 
                     tooltip={item.label}
-                    isActive={activePage === item.href.replace('#', '')}
-                    onClick={() => handleMenuClick(item.href)}
+                    isActive={activePage === item.id}
+                    onClick={() => handleMenuClick(item.href, item.id)}
                   >
                     <a href={item.href}>
                       <item.icon />
@@ -213,10 +221,22 @@ const DashboardSidebar = ({ activePage, onNavigate }) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState('dashboard');
+  
+  // Check for hash in URL and set the current page accordingly
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    if (hash) {
+      setCurrentPage(hash);
+    } else {
+      setCurrentPage('dashboard');
+    }
+  }, [location]);
   
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    window.location.hash = page;
   };
   
   const renderContent = () => {
@@ -240,8 +260,10 @@ const Dashboard = () => {
                 onSelectOption={(type) => {
                   if (type === 'ai') {
                     setCurrentPage('ai-help');
+                    window.location.hash = 'ai-help';
                   } else if (type === 'professional') {
                     setCurrentPage('professional-help');
+                    window.location.hash = 'professional-help';
                   }
                 }} 
               />
