@@ -1,20 +1,21 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, User, Bot } from 'lucide-react';
+import { ArrowLeft, Send, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-
-interface AIChatProps {
-  onBack: () => void;
-}
 
 interface Message {
   id: string;
   content: string;
   sender: 'user' | 'ai';
   timestamp: Date;
-  image?: string; // Added image property
+  image?: string;
+}
+
+interface AIChatProps {
+  onBack: () => void;
 }
 
 const AIChat = ({ onBack }: AIChatProps) => {
@@ -28,8 +29,8 @@ const AIChat = ({ onBack }: AIChatProps) => {
     },
   ]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [processing, setProcessing] = useState(false); // Add processing state
-
+  const [processing, setProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -43,29 +44,41 @@ const AIChat = ({ onBack }: AIChatProps) => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedImage(e.target.files[0]);
+      toast.success('Kép sikeresen kiválasztva');
     }
+  };
+
+  const convertImageToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProcessing(true); // Set processing to true
+    if ((!input.trim() && !selectedImage) || processing) return;
 
-    if (!input.trim() && !selectedImage) return;
-
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
-      sender: 'user',
-      timestamp: new Date(),
-      image: selectedImage ? URL.createObjectURL(selectedImage) : undefined, // Add image URL if available
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setSelectedImage(null); // Clear selected image
-
+    setProcessing(true);
+    let imageBase64 = '';
+    
     try {
+      if (selectedImage) {
+        imageBase64 = await convertImageToBase64(selectedImage);
+      }
+
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: input,
+        sender: 'user',
+        timestamp: new Date(),
+        image: imageBase64 || undefined,
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+
       const response = await fetch('https://api.llama.bravebrowser.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -76,18 +89,21 @@ const AIChat = ({ onBack }: AIChatProps) => {
           messages: [
             ...messages.map(msg => ({
               role: msg.sender === 'user' ? 'user' : 'assistant',
-              content: msg.content
+              content: msg.content + (msg.image ? '\n[Kép csatolva]' : ''),
             })),
-            { role: 'user', content: input }
+            {
+              role: 'user',
+              content: input + (imageBase64 ? '\n[Kép csatolva]' : ''),
+            },
           ],
           model: 'llama-2-7b-chat',
-          max_tokens: 800,
-          temperature: 0.7
-        })
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Az AI válasza nem érkezett meg');
+        throw new Error('Hiba történt a válasz generálása közben');
       }
 
       const data = await response.json();
@@ -97,17 +113,20 @@ const AIChat = ({ onBack }: AIChatProps) => {
         sender: 'ai',
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, aiMessage]);
+
+      setMessages(prev => [...prev, aiMessage]);
+      setInput('');
+      setSelectedImage(null);
     } catch (error) {
-      toast.error('Hiba történt az AI válasz generálása közben');
       console.error('AI Error:', error);
+      toast.error('Hiba történt az AI válasz generálása közben');
     } finally {
       setProcessing(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)] bg-quickfix-dark-gray rounded-xl overflow-hidden border border-gray-800 transition-all duration-300">
+    <div className="flex flex-col h-[calc(100vh-12rem)] bg-quickfix-dark-gray rounded-xl overflow-hidden border border-gray-800">
       <div className="flex items-center p-4 border-b border-gray-800 bg-quickfix-dark">
         <Button
           variant="ghost"
@@ -118,7 +137,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex items-center">
-          <Avatar className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+          <Avatar className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600">
             <AvatarFallback>QF</AvatarFallback>
           </Avatar>
           <div className="ml-3">
@@ -143,21 +162,25 @@ const AIChat = ({ onBack }: AIChatProps) => {
             >
               <div className="flex items-start">
                 {message.sender === 'ai' && (
-                  <Avatar className="h-6 w-6 mr-2 mt-0.5 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  <Avatar className="h-6 w-6 mr-2 mt-0.5 bg-gradient-to-br from-blue-500 to-purple-600">
                     <AvatarFallback>AI</AvatarFallback>
                   </Avatar>
                 )}
                 <div>
                   {message.image && (
-                    <img src={message.image} alt="User Image" className="h-24 w-24 rounded-md" />
+                    <img
+                      src={message.image}
+                      alt="Feltöltött kép"
+                      className="max-w-xs rounded-lg mb-2"
+                    />
                   )}
-                  <p className="text-sm">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   <span className="text-xs opacity-70 mt-1 block">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {message.timestamp.toLocaleTimeString()}
                   </span>
                 </div>
                 {message.sender === 'user' && (
-                  <Avatar className="h-6 w-6 ml-2 mt-0.5 bg-quickfix-dark text-white">
+                  <Avatar className="h-6 w-6 ml-2 mt-0.5 bg-quickfix-dark">
                     <AvatarFallback>U</AvatarFallback>
                   </Avatar>
                 )}
@@ -169,51 +192,39 @@ const AIChat = ({ onBack }: AIChatProps) => {
       </div>
 
       <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800 bg-quickfix-dark">
-        <div className="flex flex-col space-y-2">
-          <div className="flex space-x-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Írja be a problémáját..."
-              className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-            />
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-              <div className="p-2 bg-gray-800 rounded-md hover:bg-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </label>
-            <Button
-              type="submit"
-              size="icon"
-              className="bg-quickfix-yellow hover:bg-quickfix-yellow/90"
-              disabled={processing}
-            >
-              <Send className="h-5 w-5 text-quickfix-dark" />
-            </Button>
-          </div>
-          {selectedImage && (
-            <div className="flex items-center space-x-2 text-sm text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{selectedImage.name}</span>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="text-red-400 hover:text-red-300"
-              >
-                Törlés
-              </button>
-            </div>
-          )}
+        <div className="flex gap-2">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            ref={fileInputRef}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-gray-400 hover:text-white"
+          >
+            <ImagePlus className="h-5 w-5" />
+          </Button>
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Írja be üzenetét..."
+            className="flex-1"
+            disabled={processing}
+          />
+          <Button type="submit" disabled={processing}>
+            <Send className="h-5 w-5" />
+          </Button>
         </div>
+        {selectedImage && (
+          <div className="mt-2 text-sm text-gray-400">
+            Kiválasztott kép: {selectedImage.name}
+          </div>
+        )}
       </form>
     </div>
   );
