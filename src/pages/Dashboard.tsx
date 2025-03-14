@@ -25,28 +25,29 @@ import { toast } from 'sonner';
 import RequestOptions from '@/components/help/RequestOptions';
 import AIChat from '@/components/help/AIChat';
 import ProfessionalHelp from '@/components/help/ProfessionalHelp';
+import Profile from './Profile';
 
 // Navigation items for the dashboard
 const navigationItems = [
   { 
     icon: Home, 
     label: 'Főoldal', 
-    href: '#' 
+    href: '#dashboard' 
   },
   { 
     icon: MessageSquare, 
     label: 'Üzenetek', 
-    href: '#' 
+    href: '#messages' 
   },
   { 
     icon: History, 
     label: 'Előzmények', 
-    href: '#' 
+    href: '#history' 
   },
   { 
     icon: Bell, 
     label: 'Értesítések', 
-    href: '#',
+    href: '#notifications',
     badge: '3'
   },
 ];
@@ -56,12 +57,12 @@ const serviceItems = [
   { 
     icon: Wrench, 
     label: 'Szolgáltatások', 
-    href: '#' 
+    href: '#services' 
   },
   { 
     icon: HelpCircle, 
     label: 'Segítséget kérek', 
-    href: '#',
+    href: '#help',
     highlighted: true
   },
 ];
@@ -71,16 +72,16 @@ const settingsItems = [
   { 
     icon: User, 
     label: 'Profilom', 
-    href: '/profile' 
+    href: '#profile' 
   },
   { 
     icon: Settings, 
     label: 'Beállítások', 
-    href: '#' 
+    href: '#settings' 
   },
 ];
 
-const DashboardSidebar = () => {
+const DashboardSidebar = ({ activePage, onNavigate }) => {
   const navigate = useNavigate();
   
   // Would come from authentication context in a real app
@@ -93,6 +94,10 @@ const DashboardSidebar = () => {
   const handleSignOut = () => {
     toast.success('Sikeres kijelentkezés!');
     navigate('/login');
+  };
+
+  const handleMenuClick = (href) => {
+    onNavigate(href.replace('#', ''));
   };
 
   return (
@@ -119,7 +124,12 @@ const DashboardSidebar = () => {
             <SidebarMenu>
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip={item.label}
+                    isActive={activePage === item.href.replace('#', '')}
+                    onClick={() => handleMenuClick(item.href)}
+                  >
                     <a href={item.href} className="relative">
                       <item.icon />
                       <span>{item.label}</span>
@@ -147,6 +157,8 @@ const DashboardSidebar = () => {
                   <SidebarMenuButton 
                     asChild 
                     tooltip={item.label}
+                    isActive={activePage === item.href.replace('#', '')}
+                    onClick={() => handleMenuClick(item.href)}
                     className={item.highlighted ? "bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90" : ""}
                   >
                     <a href={item.href}>
@@ -168,7 +180,12 @@ const DashboardSidebar = () => {
             <SidebarMenu>
               {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip={item.label}
+                    isActive={activePage === item.href.replace('#', '')}
+                    onClick={() => handleMenuClick(item.href)}
+                  >
                     <a href={item.href}>
                       <item.icon />
                       <span>{item.label}</span>
@@ -196,48 +213,76 @@ const DashboardSidebar = () => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [helpType, setHelpType] = useState<'none' | 'ai' | 'professional'>('none');
+  const [currentPage, setCurrentPage] = useState('dashboard');
   
-  const handleSelectOption = (type: 'ai' | 'professional') => {
-    setHelpType(type);
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
   
-  const handleBack = () => {
-    setHelpType('none');
+  const renderContent = () => {
+    switch (currentPage) {
+      case 'profile':
+        return (
+          <div className="animate-fade-in">
+            <Profile onBack={() => handlePageChange('dashboard')} />
+          </div>
+        );
+      case 'help':
+        return (
+          <div className="animate-fade-in">
+            <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm">
+              <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Milyen segítségre van szüksége?</h2>
+              <p className="text-gray-300 mb-6">
+                Válasszon az alábbi lehetőségek közül, hogy milyen típusú segítségre van szüksége.
+              </p>
+              
+              <RequestOptions 
+                onSelectOption={(type) => {
+                  if (type === 'ai') {
+                    setCurrentPage('ai-help');
+                  } else if (type === 'professional') {
+                    setCurrentPage('professional-help');
+                  }
+                }} 
+              />
+            </div>
+          </div>
+        );
+      case 'ai-help':
+        return (
+          <div className="animate-scale-in">
+            <AIChat onBack={() => handlePageChange('help')} />
+          </div>
+        );
+      case 'professional-help':
+        return (
+          <div className="animate-scale-in">
+            <ProfessionalHelp onBack={() => handlePageChange('help')} />
+          </div>
+        );
+      default:
+        return (
+          <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm animate-fade-in">
+            <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Üdvözöljük a QuickFix Dashboardban!</h2>
+            <p className="text-gray-300 mb-6">
+              Fedezze fel szolgáltatásainkat és kérjen segítséget szakembereinktől vagy AI asszisztensünktől.
+            </p>
+          </div>
+        );
+    }
   };
   
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-quickfix-dark">
-        <DashboardSidebar />
+        <DashboardSidebar activePage={currentPage} onNavigate={handlePageChange} />
         <SidebarInset className="bg-quickfix-dark text-white">
           <div className="flex h-14 items-center border-b border-gray-800 px-4">
             <SidebarTrigger />
             <h1 className="ml-4 text-xl font-bold">QuickFix Dashboard</h1>
           </div>
           <div className="flex-1 p-8">
-            {helpType === 'none' && (
-              <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm animate-fade-in">
-                <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Milyen segítségre van szüksége?</h2>
-                <p className="text-gray-300 mb-6">
-                  Válasszon az alábbi lehetőségek közül, hogy milyen típusú segítségre van szüksége.
-                </p>
-                
-                <RequestOptions onSelectOption={handleSelectOption} />
-              </div>
-            )}
-            
-            {helpType === 'ai' && (
-              <div className="animate-scale-in">
-                <AIChat onBack={handleBack} />
-              </div>
-            )}
-            
-            {helpType === 'professional' && (
-              <div className="animate-scale-in">
-                <ProfessionalHelp onBack={handleBack} />
-              </div>
-            )}
+            {renderContent()}
           </div>
         </SidebarInset>
       </div>
