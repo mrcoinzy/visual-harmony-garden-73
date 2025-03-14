@@ -78,26 +78,30 @@ const AIChat = ({ onBack }: AIChatProps) => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      const response = await fetch('https://api.llama.bravebrowser.com/v1/chat/completions', {
+      const response = await fetch('https://api.brave.com/llama/v1/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Brave-API-Key': process.env.BRAVE_API_KEY || '',
+          'X-Brave-Key': process.env.BRAVE_API_KEY || '',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful assistant that helps users with their questions and problems.'
+            },
             ...messages.map(msg => ({
               role: msg.sender === 'user' ? 'user' : 'assistant',
-              content: msg.content + (msg.image ? '\n[Kép csatolva]' : ''),
+              content: msg.content + (msg.image ? '\n[Image attached]' : ''),
             })),
             {
               role: 'user',
-              content: input + (imageBase64 ? '\n[Kép csatolva]' : ''),
+              content: input + (imageBase64 ? '\n[Image:' + imageBase64.substring(0, 100) + '...]' : ''),
             },
           ],
-          model: 'llama-2-7b-chat',
-          max_tokens: 1000,
           temperature: 0.7,
+          stream: false
         }),
       });
 
@@ -107,7 +111,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
 
       const data = await response.json();
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         content: data.choices[0].message.content || 'Sajnálom, nem tudtam értelmezni a választ.',
         sender: 'ai',
         timestamp: new Date(),
