@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Home, Settings, MessageSquare, HelpCircle, Bell, Wrench, User, History } from 'lucide-react';
@@ -22,6 +21,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import RequestOptions from '@/components/help/RequestOptions';
 
 // Navigation items for the dashboard
 const navigationItems = [
@@ -194,8 +194,12 @@ const DashboardSidebar = () => {
 const Dashboard = () => {
   const navigate = useNavigate();
   
-  const handleHelpRequest = () => {
-    navigate('/help-request');
+  const handleSelectOption = (type: 'ai' | 'professional') => {
+    if (type === 'ai') {
+      navigate('/help-request', { state: { initialType: 'ai' } });
+    } else {
+      navigate('/help-request', { state: { initialType: 'professional' } });
+    }
   };
   
   return (
@@ -209,19 +213,12 @@ const Dashboard = () => {
           </div>
           <div className="flex-1 p-8">
             <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm">
-              <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Üdvözöljük a Dashboard felületen!</h2>
-              <p className="text-gray-300">
-                Innen tud hozzáférni a QuickFix összes funkciójához. Válasszon egy menüpontot a bal oldali navigációs sávból, vagy nyomja meg a "Segítséget kérek" gombot, ha szakember segítségére van szüksége.
+              <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Milyen segítségre van szüksége?</h2>
+              <p className="text-gray-300 mb-6">
+                Válasszon az alábbi lehetőségek közül, hogy milyen típusú segítségre van szüksége.
               </p>
-              <div className="mt-6">
-                <Button 
-                  className="bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
-                  onClick={handleHelpRequest}
-                >
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  Segítséget kérek
-                </Button>
-              </div>
+              
+              <RequestOptions onSelectOption={handleSelectOption} />
             </div>
           </div>
         </SidebarInset>
