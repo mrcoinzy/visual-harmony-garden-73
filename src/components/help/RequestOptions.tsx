@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Robot, User } from 'lucide-react';
+import { Bot, User } from 'lucide-react';
 import Card from '@/components/Card';
 
 type HelpType = 'none' | 'ai' | 'professional';
@@ -18,7 +18,7 @@ const RequestOptions = ({ onSelectOption }: RequestOptionsProps) => {
         onClick={() => onSelectOption('ai')}
       >
         <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mb-4">
-          <Robot className="h-8 w-8 text-white" />
+          <Bot className="h-8 w-8 text-white" />
         </div>
         <h3 className="text-xl font-semibold text-white mb-2">QuickFix AI segítségével</h3>
         <p className="text-gray-400 text-center">

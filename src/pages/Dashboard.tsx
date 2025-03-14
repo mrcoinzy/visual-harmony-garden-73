@@ -58,7 +58,7 @@ const serviceItems = [
   { 
     icon: HelpCircle, 
     label: 'Segítséget kérek', 
-    href: '#',
+    href: '/help-request',
     highlighted: true
   },
 ];
@@ -192,6 +192,12 @@ const DashboardSidebar = () => {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  
+  const handleHelpRequest = () => {
+    navigate('/help-request');
+  };
+  
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-quickfix-dark">
@@ -208,7 +214,10 @@ const Dashboard = () => {
                 Innen tud hozzáférni a QuickFix összes funkciójához. Válasszon egy menüpontot a bal oldali navigációs sávból, vagy nyomja meg a "Segítséget kérek" gombot, ha szakember segítségére van szüksége.
               </p>
               <div className="mt-6">
-                <Button className="bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90">
+                <Button 
+                  className="bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
+                  onClick={handleHelpRequest}
+                >
                   <HelpCircle className="mr-2 h-4 w-4" />
                   Segítséget kérek
                 </Button>
