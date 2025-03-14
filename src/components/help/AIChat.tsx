@@ -82,7 +82,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Brave-Key': process.env.BRAVE_API_KEY || '',
+          'X-Brave-Key': import.meta.env.VITE_BRAVE_API_KEY || '',
           'Accept': 'application/json',
         },
         body: JSON.stringify({
@@ -164,7 +164,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
-            key={message.id}
+            key={`message-${message.id}-${message.timestamp.getTime()}`}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
           >
             <div
