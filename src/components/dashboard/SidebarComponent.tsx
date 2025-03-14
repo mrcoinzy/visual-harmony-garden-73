@@ -14,12 +14,13 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
   SidebarContent,
-  SidebarSeparator
+  SidebarSeparator,
+  SidebarTrigger
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 
-// Navigation items for the dashboard
+// Navigációs elemek a dashboard számára
 const navigationItems = [
   { 
     icon: Home, 
@@ -48,7 +49,7 @@ const navigationItems = [
   },
 ];
 
-// Service items
+// Szolgáltatás elemek
 const serviceItems = [
   { 
     icon: Wrench, 
@@ -65,7 +66,7 @@ const serviceItems = [
   },
 ];
 
-// Settings items
+// Beállítások elemek
 const settingsItems = [
   { 
     icon: User, 
@@ -89,7 +90,7 @@ interface SidebarComponentProps {
 const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => {
   const navigate = useNavigate();
   
-  // Would come from authentication context in a real app
+  // Valós alkalmazásban az authentikációs kontextusból jönne
   const user = {
     name: 'Felhasználó',
     email: 'felhasznalo@example.com',
@@ -101,7 +102,7 @@ const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => 
     navigate('/login');
   };
 
-  const handleMenuClick = (href: string, id: string) => {
+  const handleMenuClick = (id: string) => {
     onNavigate(id);
   };
 
@@ -109,6 +110,7 @@ const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => 
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
+          <SidebarTrigger className="md:hidden" />
           <Avatar className="h-10 w-10 border-2 border-quickfix-yellow">
             <AvatarImage src={user.avatar || ''} alt={user.name} />
             <AvatarFallback className="bg-quickfix-dark-gray text-white">
@@ -133,9 +135,9 @@ const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => 
                     asChild 
                     tooltip={item.label}
                     isActive={activePage === item.id}
-                    onClick={() => handleMenuClick(item.href, item.id)}
+                    onClick={() => handleMenuClick(item.id)}
                   >
-                    <a href={item.href} className="relative">
+                    <div className="relative">
                       <item.icon />
                       <span>{item.label}</span>
                       {item.badge && (
@@ -143,7 +145,7 @@ const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => 
                           {item.badge}
                         </span>
                       )}
-                    </a>
+                    </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -163,13 +165,13 @@ const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => 
                     asChild 
                     tooltip={item.label}
                     isActive={activePage === item.id}
-                    onClick={() => handleMenuClick(item.href, item.id)}
+                    onClick={() => handleMenuClick(item.id)}
                     className={item.highlighted ? "bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90" : ""}
                   >
-                    <a href={item.href}>
+                    <div>
                       <item.icon />
                       <span>{item.label}</span>
-                    </a>
+                    </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -189,12 +191,12 @@ const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => 
                     asChild 
                     tooltip={item.label}
                     isActive={activePage === item.id}
-                    onClick={() => handleMenuClick(item.href, item.id)}
+                    onClick={() => handleMenuClick(item.id)}
                   >
-                    <a href={item.href}>
+                    <div>
                       <item.icon />
                       <span>{item.label}</span>
-                    </a>
+                    </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
