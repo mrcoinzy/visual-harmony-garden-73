@@ -69,7 +69,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
       }
 
       const userMessage: Message = {
-        id: Date.now().toString(),
+        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         content: input,
         sender: 'user',
         timestamp: new Date(),
@@ -127,7 +127,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
       toast.error(`Hiba történt: ${errorMessage}`);
 
       const errorResponse: Message = {
-        id: Date.now().toString(),
+        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         content: `Elnézést, technikai probléma lépett fel: ${errorMessage}. Kérem próbálja újra később.`,
         sender: 'ai',
         timestamp: new Date(),
