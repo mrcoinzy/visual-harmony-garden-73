@@ -65,18 +65,44 @@ const AIChat = ({ onBack }: AIChatProps) => {
     setInput('');
     setSelectedImage(null); // Clear selected image
 
-    // Simulate AI response (replace with actual API call)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate processing time
+      const response = await fetch('https://api.llama.bravebrowser.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Brave-API-Key': process.env.BRAVE_API_KEY || '',
+        },
+        body: JSON.stringify({
+          messages: [
+            ...messages.map(msg => ({
+              role: msg.sender === 'user' ? 'user' : 'assistant',
+              content: msg.content
+            })),
+            { role: 'user', content: input }
+          ],
+          model: 'llama-2-7b-chat',
+          max_tokens: 800,
+          temperature: 0.7
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Az AI válasza nem érkezett meg');
+      }
+
+      const data = await response.json();
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'Köszönöm a kérdését és a képet!  Megpróbálok segíteni. (Ez egy szimulált válasz, a valós AI integráció hiányzik.)',
+        content: data.choices[0].message.content,
         sender: 'ai',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      toast.error('Hiba történt az AI válasz generálása közben');
+      console.error('AI Error:', error);
     } finally {
-      setProcessing(false); // Set processing to false
+      setProcessing(false);
     }
   };
 
