@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -17,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Card } from '@/components/Card';
+import Card from '@/components/Card';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({
@@ -39,7 +38,6 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: ForgotPasswordValues) => {
     try {
-      // Itt majd a tényleges jelszó visszaállítási logika lesz
       console.log(data);
       
       toast.success('Jelszó visszaállítási link elküldve az e-mail címére!');

@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card } from '@/components/Card';
+import Card from '@/components/Card';
 import { cn } from '@/lib/utils';
 
 const signupSchema = z.object({

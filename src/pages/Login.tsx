@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Card } from '@/components/Card';
+import Card from '@/components/Card';
 import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
