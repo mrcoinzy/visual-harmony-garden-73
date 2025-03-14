@@ -112,10 +112,44 @@ const AIChat = ({ onBack }: AIChatProps) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          `API hiba: ${response.status} - ${errorData.error?.message || 'Ismeretlen hiba történt'}`
-        );
+        // Ha OpenAI nem működik, próbáljuk meg a Brave Search API-t
+        try {
+          const braveApiKey = import.meta.env.VITE_BRAVE_SEARCH_API_KEY;
+          if (!braveApiKey) {
+            throw new Error('Brave Search API kulcs nincs beállítva');
+          }
+
+          const braveResponse = await fetch('https://api.search.brave.com/res/v1/text/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Subscription-Token': braveApiKey,
+            },
+            body: JSON.stringify({
+              query: input,
+              language: "hu"
+            }),
+          });
+
+          if (!braveResponse.ok) {
+            throw new Error('Brave Search API hiba');
+          }
+
+          const braveData = await braveResponse.json();
+          return {
+            choices: [{
+              message: {
+                content: braveData.text || 'Sajnálom, nem tudtam választ generálni.'
+              }
+            }]
+          };
+        } catch (braveError) {
+          // Ha mindkét API hibás, dobjuk az eredeti OpenAI hibát
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            `API hiba: ${response.status} - ${errorData.error?.message || 'Ismeretlen hiba történt'}`
+          );
+        }
       }
 
       const data = await response.json();
