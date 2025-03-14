@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -63,7 +62,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
 
     setProcessing(true);
     let imageBase64 = '';
-    
+
     try {
       if (selectedImage) {
         imageBase64 = await convertImageToBase64(selectedImage);
@@ -109,7 +108,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
       const data = await response.json();
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.choices[0].message.content,
+        content: data.choices[0].message.content || 'Sajnálom, nem tudtam értelmezni a választ.',
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -119,7 +118,16 @@ const AIChat = ({ onBack }: AIChatProps) => {
       setSelectedImage(null);
     } catch (error) {
       console.error('AI Error:', error);
-      toast.error('Hiba történt az AI válasz generálása közben');
+      toast.error('Hiba történt az AI válasz generálása közben. Kérem próbálja újra.');
+
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: 'Elnézést, technikai probléma lépett fel. Kérem próbálja újra később.',
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setProcessing(false);
     }
