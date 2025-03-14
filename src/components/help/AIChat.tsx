@@ -123,30 +123,39 @@ const AIChat = ({ onBack }: AIChatProps) => {
           }
 
           console.log('Brave API hívás kezdeményezése...');
-          const braveResponse = await fetch('https://api.search.brave.com/res/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Subscription-Token': braveApiKey,
-            },
-            body: JSON.stringify({
-              messages: [{
-                role: "user",
-                content: input
-              }],
-              model: "mixtral-8x7b",
-              temperature: 0.7,
-              stream: false
-            }),
-          });
+          try {
+            const braveResponse = await fetch('https://api.search.brave.com/res/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Subscription-Token': braveApiKey,
+              },
+              body: JSON.stringify({
+                messages: [{
+                  role: "user",
+                  content: input
+                }],
+                model: "mixtral-8x7b",
+                temperature: 0.7,
+                stream: false
+              }),
+            });
 
-          console.log('Brave API válasz státusz:', braveResponse.status);
-          const responseText = await braveResponse.text();
-          console.log('Brave API válasz:', responseText);
+            console.log('Brave API válasz státusz:', braveResponse.status);
+            const responseText = await braveResponse.text();
+            console.log('Brave API válasz:', responseText);
 
-          if (!braveResponse.ok) {
-            throw new Error(`Brave Search API hiba: ${braveResponse.status} - ${responseText}`);
-          }
+            if (!braveResponse.ok) {
+              throw new Error(`Brave Search API hiba: ${braveResponse.status}`);
+            }
+
+            let parsedResponse;
+            try {
+              parsedResponse = JSON.parse(responseText);
+            } catch (e) {
+              console.error('JSON parse error:', e);
+              throw new Error('Érvénytelen válasz a Brave API-tól');
+            }
 
           const braveData = JSON.parse(responseText);
           console.log('Brave API válasz feldolgozva:', braveData);
@@ -180,9 +189,18 @@ const AIChat = ({ onBack }: AIChatProps) => {
       setSelectedImage(null);
     } catch (error) {
       console.error('AI Error:', error);
-      const errorMessage = error instanceof Error && error.message.includes('429') 
-          ? 'Az AI szolgáltatás átmenetileg nem elérhető a nagy terhelés miatt. Kérjük, próbálja újra néhány perc múlva.'
-          : error instanceof Error ? error.message : 'Ismeretlen hiba történt';
+      let errorMessage = 'Ismeretlen hiba történt';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('429')) {
+          errorMessage = 'Az AI szolgáltatás átmenetileg nem elérhető a nagy terhelés miatt. Kérjük, próbálja újra néhány perc múlva.';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Nem sikerült kapcsolódni az AI szolgáltatáshoz. Kérjük, ellenőrizze az internetkapcsolatát.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast.error(`Hiba történt: ${errorMessage}`);
 
       const errorResponse: Message = {
