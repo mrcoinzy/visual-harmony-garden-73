@@ -80,11 +80,16 @@ const AIChat = ({ onBack }: AIChatProps) => {
 
       setMessages(prev => [...prev, userMessage]);
 
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error('OpenAI API kulcs nincs beállítva. Kérjük, ellenőrizze a környezeti változókat.');
+      }
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: "gpt-4",
@@ -107,7 +112,10 @@ const AIChat = ({ onBack }: AIChatProps) => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `API hiba: ${response.status} - ${errorData.error?.message || 'Ismeretlen hiba történt'}`
+        );
       }
 
       const data = await response.json();
