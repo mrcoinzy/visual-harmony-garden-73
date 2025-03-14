@@ -9,14 +9,15 @@ const Dashboard = () => {
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState('dashboard');
   
-  // Check for hash in URL and set the current page accordingly
+  // URL hash változásának követése és a megfelelő oldal beállítása
   useEffect(() => {
     const hash = location.hash.replace('#', '');
     if (hash) {
-      // Az AI-Help és Professional-Help oldalak a help kategóriába tartoznak a sidebar-on
       if (hash === 'ai-help' || hash === 'professional-help') {
         setCurrentPage('help');
-      } else {
+      } else if (hash === 'profile' || hash === 'dashboard' || hash === 'messages' || 
+                hash === 'history' || hash === 'notifications' || 
+                hash === 'services' || hash === 'settings' || hash === 'help') {
         setCurrentPage(hash);
       }
     } else {
@@ -25,18 +26,15 @@ const Dashboard = () => {
   }, [location]);
   
   const handlePageChange = (page) => {
-    // Ha a segítség aloldalairól váltunk, frissítsük a hash-t és állítsuk be a megfelelő aktív oldalt
-    if (page === 'help') {
-      setCurrentPage(page);
-      window.location.hash = page;
-    } else if (page === 'dashboard' || page === 'profile' || page === 'messages' || 
-               page === 'history' || page === 'notifications' || page === 'services' || 
-               page === 'settings') {
+    // A fő kategóriák közvetlen beállítása
+    if (page === 'dashboard' || page === 'profile' || page === 'messages' || 
+        page === 'history' || page === 'notifications' || page === 'services' || 
+        page === 'settings' || page === 'help') {
       setCurrentPage(page);
       window.location.hash = page;
     } else {
-      // Bármely más aloldalra (pl. ai-help, professional-help) navigálunk, tároljuk a valós hash-t
-      // de a sidebar-on a megfelelő szülő kategóriát jelöljük aktívnak
+      // Alkategóriák (ai-help, professional-help) kezelése
+      // Megtartjuk az alkategória hash-t, de a sidebar megfelelő szülő elemet jelöli aktívnak
       const parentCategory = 
         page.includes('help') ? 'help' :
         page.includes('profile') ? 'profile' : 
@@ -56,7 +54,7 @@ const Dashboard = () => {
             <SidebarTrigger />
             <h1 className="ml-4 text-xl font-bold">QuickFix Dashboard</h1>
           </div>
-          <DashboardContent currentPage={currentPage} onPageChange={handlePageChange} />
+          <DashboardContent currentPage={location.hash.replace('#', '') || 'dashboard'} onPageChange={handlePageChange} />
         </SidebarInset>
       </div>
     </SidebarProvider>

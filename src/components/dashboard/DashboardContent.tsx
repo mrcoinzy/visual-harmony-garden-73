@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
 import Profile from '@/pages/Profile';
 import RequestOptions from '@/components/help/RequestOptions';
 import AIChat from '@/components/help/AIChat';
@@ -12,9 +11,9 @@ interface DashboardContentProps {
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({ currentPage, onPageChange }) => {
-  const location = useLocation();
   
   const renderContent = () => {
+    // Alapvető oldalak renderelése a currentPage alapján
     switch (currentPage) {
       case 'profile':
         return (
@@ -34,41 +33,38 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ currentPage, onPage
               <RequestOptions 
                 onSelectOption={(type) => {
                   if (type === 'ai') {
-                    window.location.hash = 'ai-help';
+                    onPageChange('ai-help');
                   } else if (type === 'professional') {
-                    window.location.hash = 'professional-help';
+                    onPageChange('professional-help');
                   }
                 }} 
               />
             </div>
           </div>
         );
+      case 'ai-help':
+        return (
+          <div className="animate-scale-in">
+            <AIChat onBack={() => onPageChange('help')} />
+          </div>
+        );
+      case 'professional-help':
+        return (
+          <div className="animate-scale-in">
+            <ProfessionalHelp onBack={() => onPageChange('help')} />
+          </div>
+        );
+      case 'dashboard':
       default:
-        // Ellenőrizzük a URL hash-t a specifikus aloldalakhoz
-        const hash = location.hash.replace('#', '');
-        if (hash === 'ai-help') {
-          return (
-            <div className="animate-scale-in">
-              <AIChat onBack={() => onPageChange('help')} />
-            </div>
-          );
-        } else if (hash === 'professional-help') {
-          return (
-            <div className="animate-scale-in">
-              <ProfessionalHelp onBack={() => onPageChange('help')} />
-            </div>
-          );
-        } else {
-          // Alapértelmezett tartalom (főoldal)
-          return (
-            <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm animate-fade-in">
-              <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Üdvözöljük a QuickFix Dashboardban!</h2>
-              <p className="text-gray-300 mb-6">
-                Fedezze fel szolgáltatásainkat és kérjen segítséget szakembereinktől vagy AI asszisztensünktől.
-              </p>
-            </div>
-          );
-        }
+        // Alapértelmezett tartalom (főoldal)
+        return (
+          <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm animate-fade-in">
+            <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Üdvözöljük a QuickFix Dashboardban!</h2>
+            <p className="text-gray-300 mb-6">
+              Fedezze fel szolgáltatásainkat és kérjen segítséget szakembereinktől vagy AI asszisztensünktől.
+            </p>
+          </div>
+        );
     }
   };
   
