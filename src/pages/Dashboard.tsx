@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Home, Settings, MessageSquare, HelpCircle, Bell, Wrench, User, History } from 'lucide-react';
@@ -60,7 +61,7 @@ const serviceItems = [
   { 
     icon: HelpCircle, 
     label: 'Segítséget kérek', 
-    href: '/help-request',
+    href: '#',
     highlighted: true
   },
 ];
@@ -70,7 +71,7 @@ const settingsItems = [
   { 
     icon: User, 
     label: 'Profilom', 
-    href: '#' 
+    href: '/profile' 
   },
   { 
     icon: Settings, 
