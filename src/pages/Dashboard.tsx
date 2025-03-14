@@ -14,12 +14,12 @@ const Dashboard = () => {
     const hash = location.hash.replace('#', '');
     
     if (hash) {
-      // Az alkategóriák kezelése
-      if (hash === 'ai-help' || hash === 'professional-help') {
+      if (hash === 'profile') {
+        setActivePage('profile');
+      } else if (hash === 'help' || hash === 'ai-help' || hash === 'professional-help') {
         setActivePage('help');
       } else {
-        // Főkategóriák kezelése
-        setActivePage(hash);
+        setActivePage('dashboard');
       }
     } else {
       setActivePage('dashboard');
@@ -28,10 +28,13 @@ const Dashboard = () => {
   
   // Egyszerűsített navigációs kezelés
   const handlePageChange = (page) => {
-    if (page === 'ai-help' || page === 'professional-help') {
-      setActivePage('help');
+    if (page === 'dashboard') {
+      setActivePage('dashboard');
+    } else if (page === 'profile') {
+      setActivePage('profile');
     } else {
-      setActivePage(page);
+      // help, ai-help, professional-help esetén a help menü legyen aktív
+      setActivePage('help');
     }
     
     window.location.hash = page;

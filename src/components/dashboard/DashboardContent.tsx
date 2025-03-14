@@ -4,6 +4,7 @@ import Profile from '@/pages/Profile';
 import RequestOptions from '@/components/help/RequestOptions';
 import AIChat from '@/components/help/AIChat';
 import ProfessionalHelp from '@/components/help/ProfessionalHelp';
+import DashboardHome from '@/components/dashboard/DashboardHome';
 
 interface DashboardContentProps {
   currentPage: string;
@@ -15,14 +16,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ currentPage, onPage
   const renderContent = () => {
     // Főoldal megjelenítése
     if (currentPage === '' || currentPage === 'dashboard') {
-      return (
-        <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm animate-fade-in">
-          <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Üdvözöljük a QuickFix Dashboardban!</h2>
-          <p className="text-gray-300 mb-6">
-            Fedezze fel szolgáltatásainkat és kérjen segítséget szakembereinktől vagy AI asszisztensünktől.
-          </p>
-        </div>
-      );
+      return <DashboardHome />;
     }
     
     // Profil oldal megjelenítése
