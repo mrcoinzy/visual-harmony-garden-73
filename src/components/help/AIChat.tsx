@@ -112,34 +112,49 @@ const AIChat = ({ onBack }: AIChatProps) => {
       });
 
       if (!response.ok) {
+        console.log('OpenAI API hiba:', response.status);
         // Ha OpenAI nem működik, próbáljuk meg a Brave Search API-t
         try {
           const braveApiKey = import.meta.env.VITE_BRAVE_SEARCH_API_KEY;
+          console.log('Brave API kulcs ellenőrzése:', braveApiKey ? 'Megtalálva' : 'Hiányzik');
+          
           if (!braveApiKey) {
             throw new Error('Brave Search API kulcs nincs beállítva');
           }
 
-          const braveResponse = await fetch('https://api.search.brave.com/res/v1/text/chat', {
+          console.log('Brave API hívás kezdeményezése...');
+          const braveResponse = await fetch('https://api.search.brave.com/res/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-Subscription-Token': braveApiKey,
             },
             body: JSON.stringify({
-              query: input,
-              language: "hu"
+              messages: [{
+                role: "user",
+                content: input
+              }],
+              model: "mixtral-8x7b",
+              temperature: 0.7,
+              stream: false
             }),
           });
 
+          console.log('Brave API válasz státusz:', braveResponse.status);
+          const responseText = await braveResponse.text();
+          console.log('Brave API válasz:', responseText);
+
           if (!braveResponse.ok) {
-            throw new Error('Brave Search API hiba');
+            throw new Error(`Brave Search API hiba: ${braveResponse.status} - ${responseText}`);
           }
 
-          const braveData = await braveResponse.json();
+          const braveData = JSON.parse(responseText);
+          console.log('Brave API válasz feldolgozva:', braveData);
+          
           return {
             choices: [{
               message: {
-                content: braveData.text || 'Sajnálom, nem tudtam választ generálni.'
+                content: braveData.choices?.[0]?.message?.content || 'Sajnálom, nem tudtam választ generálni.'
               }
             }]
           };
