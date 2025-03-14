@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, User, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -68,7 +67,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
   };
   
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)] bg-quickfix-dark-gray rounded-xl overflow-hidden border border-gray-800">
+    <div className="flex flex-col h-[calc(100vh-12rem)] bg-quickfix-dark-gray rounded-xl overflow-hidden border border-gray-800 transition-all duration-300">
       <div className="flex items-center p-4 border-b border-gray-800 bg-quickfix-dark">
         <Button 
           variant="ghost" 
@@ -93,7 +92,7 @@ const AIChat = ({ onBack }: AIChatProps) => {
         {messages.map((message) => (
           <div 
             key={message.id} 
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
           >
             <div 
               className={`max-w-[80%] p-3 rounded-lg ${

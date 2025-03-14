@@ -51,7 +51,7 @@ const ProfessionalHelp = ({ onBack }: ProfessionalHelpProps) => {
   };
   
   return (
-    <div className="bg-quickfix-dark-gray rounded-xl overflow-hidden border border-gray-800 p-6">
+    <div className="bg-quickfix-dark-gray rounded-xl overflow-hidden border border-gray-800 p-6 transition-all duration-300">
       <div className="flex items-center mb-6">
         <Button 
           variant="ghost" 
@@ -65,7 +65,7 @@ const ProfessionalHelp = ({ onBack }: ProfessionalHelpProps) => {
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fade-in">
           <div>
             <Label htmlFor="problem" className="text-white">Mi a probléma?</Label>
             <Textarea
@@ -129,7 +129,7 @@ const ProfessionalHelp = ({ onBack }: ProfessionalHelpProps) => {
         
         <Button 
           type="submit" 
-          className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
+          className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90 animate-fade-in"
         >
           <Send className="mr-2 h-4 w-4" />
           Segítségkérés küldése

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Home, Settings, MessageSquare, HelpCircle, Bell, Wrench, User, History } from 'lucide-react';
 
@@ -22,6 +22,8 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import RequestOptions from '@/components/help/RequestOptions';
+import AIChat from '@/components/help/AIChat';
+import ProfessionalHelp from '@/components/help/ProfessionalHelp';
 
 // Navigation items for the dashboard
 const navigationItems = [
@@ -193,13 +195,14 @@ const DashboardSidebar = () => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [helpType, setHelpType] = useState<'none' | 'ai' | 'professional'>('none');
   
   const handleSelectOption = (type: 'ai' | 'professional') => {
-    if (type === 'ai') {
-      navigate('/help-request', { state: { initialType: 'ai' } });
-    } else {
-      navigate('/help-request', { state: { initialType: 'professional' } });
-    }
+    setHelpType(type);
+  };
+  
+  const handleBack = () => {
+    setHelpType('none');
   };
   
   return (
@@ -212,14 +215,28 @@ const Dashboard = () => {
             <h1 className="ml-4 text-xl font-bold">QuickFix Dashboard</h1>
           </div>
           <div className="flex-1 p-8">
-            <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm">
-              <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Milyen segítségre van szüksége?</h2>
-              <p className="text-gray-300 mb-6">
-                Válasszon az alábbi lehetőségek közül, hogy milyen típusú segítségre van szüksége.
-              </p>
-              
-              <RequestOptions onSelectOption={handleSelectOption} />
-            </div>
+            {helpType === 'none' && (
+              <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm animate-fade-in">
+                <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Milyen segítségre van szüksége?</h2>
+                <p className="text-gray-300 mb-6">
+                  Válasszon az alábbi lehetőségek közül, hogy milyen típusú segítségre van szüksége.
+                </p>
+                
+                <RequestOptions onSelectOption={handleSelectOption} />
+              </div>
+            )}
+            
+            {helpType === 'ai' && (
+              <div className="animate-scale-in">
+                <AIChat onBack={handleBack} />
+              </div>
+            )}
+            
+            {helpType === 'professional' && (
+              <div className="animate-scale-in">
+                <ProfessionalHelp onBack={handleBack} />
+              </div>
+            )}
           </div>
         </SidebarInset>
       </div>
