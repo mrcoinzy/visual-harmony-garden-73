@@ -2,9 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -57,13 +61,47 @@ const Navbar = () => {
             <span>Regisztráció</span>
           </Link>
           
-          <button className="md:hidden text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
+          {/* Mobile menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" className="md:hidden text-white p-1" aria-label="Menü">
+                <Menu size={24} />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-quickfix-dark border-quickfix-dark-gray">
+              <div className="flex flex-col h-full">
+                <div className="py-6">
+                  <Link to="/" className="flex items-center gap-2 mb-6">
+                    <span className="text-quickfix-yellow font-bold text-2xl">
+                      Quick<span className="text-white">Fix</span>
+                    </span>
+                  </Link>
+                  
+                  <nav className="flex flex-col space-y-4">
+                    <MobileNavLink href="#services">Szolgáltatások</MobileNavLink>
+                    <MobileNavLink href="#professionals">Szakemberek</MobileNavLink>
+                    <MobileNavLink href="#about">Rólunk</MobileNavLink>
+                    <MobileNavLink href="#contact">Kapcsolat</MobileNavLink>
+                  </nav>
+                </div>
+                
+                <div className="mt-auto border-t border-gray-800 pt-6 pb-8 space-y-4">
+                  <Link
+                    to="/login"
+                    className="block w-full text-center py-3 text-white hover:text-quickfix-yellow"
+                  >
+                    Bejelentkezés
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="block w-full text-center py-3 bg-quickfix-yellow text-quickfix-dark rounded-xl hover:shadow-lg"
+                  >
+                    Regisztráció
+                  </Link>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
@@ -78,6 +116,17 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
     >
       {children}
       <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-quickfix-yellow group-hover:w-full transition-all duration-300"></span>
+    </a>
+  );
+};
+
+const MobileNavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
+  return (
+    <a
+      href={href}
+      className="text-lg text-gray-200 py-2 hover:text-quickfix-yellow transition-colors"
+    >
+      {children}
     </a>
   );
 };
