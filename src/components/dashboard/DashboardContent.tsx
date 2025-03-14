@@ -5,6 +5,11 @@ import RequestOptions from '@/components/help/RequestOptions';
 import AIChat from '@/components/help/AIChat';
 import ProfessionalHelp from '@/components/help/ProfessionalHelp';
 import DashboardHome from '@/components/dashboard/DashboardHome';
+import Messages from '@/pages/Messages';
+import History from '@/pages/History';
+import Notifications from '@/pages/Notifications';
+import Services from '@/pages/Services';
+import Settings from '@/pages/Settings';
 
 interface DashboardContentProps {
   currentPage: string;
@@ -17,6 +22,51 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ currentPage, onPage
     // Főoldal megjelenítése
     if (currentPage === '' || currentPage === 'dashboard') {
       return <DashboardHome />;
+    }
+    
+    // Üzenetek oldal megjelenítése
+    if (currentPage === 'messages') {
+      return (
+        <div className="animate-fade-in">
+          <Messages onBack={() => onPageChange('dashboard')} />
+        </div>
+      );
+    }
+    
+    // Előzmények oldal megjelenítése
+    if (currentPage === 'history') {
+      return (
+        <div className="animate-fade-in">
+          <History onBack={() => onPageChange('dashboard')} />
+        </div>
+      );
+    }
+    
+    // Értesítések oldal megjelenítése
+    if (currentPage === 'notifications') {
+      return (
+        <div className="animate-fade-in">
+          <Notifications onBack={() => onPageChange('dashboard')} />
+        </div>
+      );
+    }
+    
+    // Szolgáltatások oldal megjelenítése
+    if (currentPage === 'services') {
+      return (
+        <div className="animate-fade-in">
+          <Services onBack={() => onPageChange('dashboard')} />
+        </div>
+      );
+    }
+    
+    // Beállítások oldal megjelenítése
+    if (currentPage === 'settings') {
+      return (
+        <div className="animate-fade-in">
+          <Settings onBack={() => onPageChange('dashboard')} />
+        </div>
+      );
     }
     
     // Profil oldal megjelenítése

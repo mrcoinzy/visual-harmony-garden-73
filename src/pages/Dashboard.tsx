@@ -14,30 +14,71 @@ const Dashboard = () => {
     const hash = location.hash.replace('#', '');
     
     if (hash) {
-      if (hash === 'profile') {
+      // Dashboard route esetén
+      if (hash === 'dashboard') {
+        setActivePage('dashboard');
+      }
+      // Messages route esetén
+      else if (hash === 'messages') {
+        setActivePage('messages');
+      }
+      // History route esetén
+      else if (hash === 'history') {
+        setActivePage('history');
+      }
+      // Notifications route esetén
+      else if (hash === 'notifications') {
+        setActivePage('notifications');
+      }
+      // Services route esetén
+      else if (hash === 'services') {
+        setActivePage('services');
+      }
+      // Profile route esetén
+      else if (hash === 'profile') {
         setActivePage('profile');
-      } else if (hash === 'help' || hash === 'ai-help' || hash === 'professional-help') {
+      }
+      // Settings route esetén
+      else if (hash === 'settings') {
+        setActivePage('settings');
+      }
+      // Help route esetén
+      else if (hash === 'help' || hash === 'ai-help' || hash === 'professional-help') {
         setActivePage('help');
-      } else {
+      }
+      // Ha ismeretlen, akkor a főoldal az alapértelmezett
+      else {
         setActivePage('dashboard');
       }
     } else {
+      // Ha nincs hash, a főoldal az alapértelmezett
       setActivePage('dashboard');
     }
   }, [location]);
   
-  // Egyszerűsített navigációs kezelés
+  // Navigációs kezelés
   const handlePageChange = (page) => {
+    // Az URL hash frissítése
+    window.location.hash = page;
+    
+    // Az aktív oldal beállítása a megfelelő menüpont kiemeléséhez
     if (page === 'dashboard') {
       setActivePage('dashboard');
+    } else if (page === 'messages') {
+      setActivePage('messages');
+    } else if (page === 'history') {
+      setActivePage('history');
+    } else if (page === 'notifications') {
+      setActivePage('notifications');
+    } else if (page === 'services') {
+      setActivePage('services');
+    } else if (page === 'settings') {
+      setActivePage('settings');
     } else if (page === 'profile') {
       setActivePage('profile');
-    } else {
-      // help, ai-help, professional-help esetén a help menü legyen aktív
+    } else if (page === 'help' || page === 'ai-help' || page === 'professional-help') {
       setActivePage('help');
     }
-    
-    window.location.hash = page;
   };
   
   return (
