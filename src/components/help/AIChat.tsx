@@ -122,43 +122,6 @@ const AIChat = ({ onBack }: AIChatProps) => {
             throw new Error('Brave Search API kulcs nincs beállítva');
           }
 
-          const braveResponse = await fetch('https://api.search.brave.com/res/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Subscription-Token': braveApiKey,
-            },
-            body: JSON.stringify({
-              messages: [{
-                role: "user",
-                content: input
-              }],
-              model: "mixtral-8x7b",
-              temperature: 0.7,
-              stream: false
-            }),
-          });
-
-          if (!braveResponse.ok) {
-            throw new Error(`Brave Search API hiba: ${braveResponse.status}`);
-          }
-
-          const braveData = await braveResponse.json();
-          return {
-            choices: [{
-              message: {
-                content: braveData.answer || 'Sajnálom, nem tudtam választ generálni.'
-              }
-            }]
-          };
-        } catch (braveError) {
-          console.error('Brave API hiba:', braveError);
-          throw new Error(
-            `API hiba: ${response.status} - A másodlagos API is hibát dobott`
-          );
-        }
-      }
-
           console.log('Brave API hívás kezdeményezése...');
           try {
             const braveResponse = await fetch('https://api.search.brave.com/res/v1/chat/completions', {
