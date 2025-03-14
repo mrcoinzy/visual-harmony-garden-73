@@ -106,13 +106,14 @@ const AIChat = ({ onBack }: AIChatProps) => {
       });
 
       if (!response.ok) {
-        throw new Error('Hiba történt a válasz generálása közben');
+        const errorText = `Hiba történt az AI válasz generálása közben. HTTP státusz kód: ${response.status}`;
+        throw new Error(errorText);
       }
 
       const data = await response.json();
       const aiMessage: Message = {
         id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        content: data.choices[0].message.content || 'Sajnálom, nem tudtam értelmezni a választ.',
+        content: data.choices?.[0]?.message?.content || 'Sajnálom, nem tudtam értelmezni a választ.',
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -122,16 +123,17 @@ const AIChat = ({ onBack }: AIChatProps) => {
       setSelectedImage(null);
     } catch (error) {
       console.error('AI Error:', error);
-      toast.error('Hiba történt az AI válasz generálása közben. Kérem próbálja újra.');
+      const errorMessage = (error instanceof Error) ? error.message : 'Ismeretlen hiba történt az AI-val.';
+      toast.error(`Hiba történt: ${errorMessage}`);
 
-      const errorMessage: Message = {
+      const errorResponse: Message = {
         id: Date.now().toString(),
-        content: 'Elnézést, technikai probléma lépett fel. Kérem próbálja újra később.',
+        content: `Elnézést, technikai probléma lépett fel: ${errorMessage}. Kérem próbálja újra később.`,
         sender: 'ai',
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorResponse]);
     } finally {
       setProcessing(false);
     }
