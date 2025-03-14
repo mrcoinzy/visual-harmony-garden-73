@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

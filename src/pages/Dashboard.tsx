@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Home, Settings, MessageSquare, HelpCircle, Bell, Wrench, User, History } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,9 @@ import {
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import RequestOptions from '@/components/help/RequestOptions';
 import AIChat from '@/components/help/AIChat';
 import ProfessionalHelp from '@/components/help/ProfessionalHelp';
-import Profile from './Profile';
 
 // Navigation items for the dashboard
 const navigationItems = [
@@ -71,8 +71,7 @@ const settingsItems = [
   { 
     icon: User, 
     label: 'Profilom', 
-    href: '#profile',
-    id: 'profile'
+    href: '/profile' 
   },
   { 
     icon: Settings, 
@@ -81,7 +80,7 @@ const settingsItems = [
   },
 ];
 
-const DashboardSidebar = ({ activePage }: { activePage: string }) => {
+const DashboardSidebar = () => {
   const navigate = useNavigate();
   
   // Would come from authentication context in a real app
@@ -169,12 +168,7 @@ const DashboardSidebar = ({ activePage }: { activePage: string }) => {
             <SidebarMenu>
               {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton 
-                    asChild 
-                    tooltip={item.label}
-                    isActive={activePage === item.id}
-                    className={activePage === item.id ? "bg-quickfix-yellow/20" : ""}
-                  >
+                  <SidebarMenuButton asChild tooltip={item.label}>
                     <a href={item.href}>
                       <item.icon />
                       <span>{item.label}</span>
@@ -202,74 +196,34 @@ const DashboardSidebar = ({ activePage }: { activePage: string }) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [helpType, setHelpType] = useState<'none' | 'ai' | 'professional'>('none');
-  const [showProfile, setShowProfile] = useState(false);
   
-  // Check if the URL hash is #profile to show profile
-  React.useEffect(() => {
-    if (location.hash === '#profile') {
-      setShowProfile(true);
-      setHelpType('none');
-    } else {
-      setShowProfile(false);
-    }
-  }, [location.hash]);
-  
-  const handleSelectHelp = (type: 'ai' | 'professional') => {
+  const handleSelectOption = (type: 'ai' | 'professional') => {
     setHelpType(type);
-    setShowProfile(false);
-    navigate('#');
   };
   
   const handleBack = () => {
     setHelpType('none');
-    setShowProfile(false);
-    navigate('#');
   };
-  
-  // Determine active page for sidebar highlighting
-  const activePage = showProfile ? 'profile' : '';
   
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-quickfix-dark">
-        <DashboardSidebar activePage={activePage} />
+        <DashboardSidebar />
         <SidebarInset className="bg-quickfix-dark text-white">
           <div className="flex h-14 items-center border-b border-gray-800 px-4">
             <SidebarTrigger />
             <h1 className="ml-4 text-xl font-bold">QuickFix Dashboard</h1>
           </div>
           <div className="flex-1 p-8">
-            {!helpType && !showProfile && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                <div 
-                  className="card-featured cursor-pointer hover-card"
-                  onClick={() => handleSelectHelp('ai')}
-                >
-                  <div className="icon-container">
-                    <MessageSquare className="h-6 w-6 text-quickfix-yellow" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-quickfix-yellow">QuickFix AI</h3>
-                  <p className="text-gray-300">
-                    Azonnali automatikus segítség a leggyakoribb problémákhoz. 
-                    Az AI asszisztensünk gyorsan válaszol a kérdésekre.
-                  </p>
-                </div>
+            {helpType === 'none' && (
+              <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm animate-fade-in">
+                <h2 className="mb-4 text-2xl font-bold text-quickfix-yellow">Milyen segítségre van szüksége?</h2>
+                <p className="text-gray-300 mb-6">
+                  Válasszon az alábbi lehetőségek közül, hogy milyen típusú segítségre van szüksége.
+                </p>
                 
-                <div 
-                  className="card-featured cursor-pointer hover-card"
-                  onClick={() => handleSelectHelp('professional')}
-                >
-                  <div className="icon-container">
-                    <Wrench className="h-6 w-6 text-quickfix-yellow" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-quickfix-yellow">Szakember segítsége</h3>
-                  <p className="text-gray-300">
-                    Kapcsolatba léphet képzett szakembereinkkel, 
-                    akik személyre szabott megoldást nyújtanak az Ön problémájára.
-                  </p>
-                </div>
+                <RequestOptions onSelectOption={handleSelectOption} />
               </div>
             )}
             
@@ -282,12 +236,6 @@ const Dashboard = () => {
             {helpType === 'professional' && (
               <div className="animate-scale-in">
                 <ProfessionalHelp onBack={handleBack} />
-              </div>
-            )}
-            
-            {showProfile && (
-              <div className="animate-scale-in">
-                <Profile onBack={handleBack} />
               </div>
             )}
           </div>

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, User, Mail, Lock, Upload, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-interface ProfileProps {
-  onBack?: () => void;
-}
-
-const Profile = ({ onBack }: ProfileProps) => {
+const Profile = () => {
+  const navigate = useNavigate();
+  
   // Sample user data - in a real app, this would come from authentication context
   const [userData, setUserData] = useState({
     name: 'Felhasználó',
@@ -24,6 +23,10 @@ const Profile = ({ onBack }: ProfileProps) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [tempUserData, setTempUserData] = useState({ ...userData });
+  
+  const handleBack = () => {
+    navigate('/dashboard');
+  };
   
   const handleEditToggle = () => {
     if (isEditing) {
@@ -85,19 +88,17 @@ const Profile = ({ onBack }: ProfileProps) => {
   };
   
   return (
-    <div className="w-full">
+    <div className="min-h-screen bg-quickfix-dark text-white p-6">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center mb-8">
-          {onBack && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onBack}
-              className="mr-2 text-gray-400 hover:text-white"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleBack}
+            className="mr-2 text-gray-400 hover:text-white"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <h1 className="text-2xl font-bold text-quickfix-yellow">Profilom</h1>
         </div>
         
