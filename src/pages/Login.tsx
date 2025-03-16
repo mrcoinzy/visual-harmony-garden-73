@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -17,7 +18,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import Card from '@/components/Card';
-import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
@@ -34,7 +34,6 @@ type LoginValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
   
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -46,22 +45,14 @@ const Login = () => {
 
   const onSubmit = async (data: LoginValues) => {
     try {
-      setIsLoading(true);
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-      
-      if (error) throw error;
+      // Itt majd a tényleges bejelentkezési kérés lesz
+      console.log(data);
       
       toast.success('Sikeres bejelentkezés!');
       navigate('/dashboard');
     } catch (error) {
-      console.error(error);
       toast.error('Sikertelen bejelentkezés. Kérjük, ellenőrizze adatait.');
-    } finally {
-      setIsLoading(false);
+      console.error(error);
     }
   };
 
@@ -140,9 +131,8 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
-              disabled={isLoading}
             >
-              {isLoading ? 'Bejelentkezés...' : 'Bejelentkezés'}
+              Bejelentkezés
             </Button>
             
             <div className="text-center mt-6">
