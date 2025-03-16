@@ -16,29 +16,18 @@ import {
   Tooltip 
 } from "recharts";
 
-type FinanceChartProps = {
-  isLoading?: boolean;
-  data: Array<{
-    name: string;
-    amount: number;
-  }>;
-};
+// Minta adatok a grafikonhoz - éles környezetben API-ból jönne
+const data = [
+  { name: 'Jan', amount: 12400 },
+  { name: 'Feb', amount: 9800 },
+  { name: 'Mar', amount: 16200 },
+  { name: 'Apr', amount: 18100 },
+  { name: 'May', amount: 14500 },
+  { name: 'Jun', amount: 19900 },
+  { name: 'Jul', amount: 22400 }
+];
 
-const FinanceChart = ({ isLoading, data }: FinanceChartProps) => {
-  // If loading or no data, show placeholder
-  if (isLoading) {
-    return (
-      <Card className="border-none bg-quickfix-dark-gray shadow-md animate-pulse col-span-2 h-[400px]">
-        <CardHeader>
-          <div className="h-6 bg-gray-700 rounded w-1/4"></div>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-[300px]">
-          <div className="text-gray-500">Adatok betöltése...</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+const FinanceChart = () => {
   return (
     <Card className="border-none bg-quickfix-dark-gray shadow-md animate-fade-in col-span-2">
       <CardHeader>
