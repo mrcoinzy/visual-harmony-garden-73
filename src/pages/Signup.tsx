@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Lock, Mail, User, Check } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import Card from '@/components/Card';
-import { cn } from '@/lib/utils';
+import { supabase, handleSupabaseError } from '@/lib/supabase';
 
 const signupSchema = z.object({
   name: z.string().min(2, {
@@ -46,6 +46,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -60,14 +61,55 @@ const Signup = () => {
 
   const onSubmit = async (data: SignupValues) => {
     try {
-      // Itt majd a tényleges regisztráció lesz
-      console.log(data);
+      setIsLoading(true);
+      
+      // Regisztráció a Supabase Auth szolgáltatással
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.name,
+            accept_terms: data.acceptTerms,
+            created_at: new Date().toISOString(),
+          }
+        }
+      });
+      
+      if (signUpError) {
+        throw signUpError;
+      }
+      
+      // Profil létrehozása a felhasználói adattáblában
+      const { data: authUser } = await supabase.auth.getUser();
+      
+      if (authUser?.user?.id) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { 
+              id: authUser.user.id,
+              full_name: data.name,
+              balance: 0,
+              messages_count: 0,
+              ai_conversations_count: 0,
+              professional_tasks_count: 0,
+            }
+          ]);
+          
+        if (profileError) {
+          console.error('Profil létrehozási hiba:', profileError);
+        }
+      }
       
       toast.success('Sikeres regisztráció!');
-      navigate('/login');
+      // Átirányítás a dashboard-ra bejelentkezés helyett, ahogy kérve volt
+      navigate('/dashboard');
     } catch (error) {
-      toast.error('Sikertelen regisztráció. Kérjük, próbálja újra.');
-      console.error(error);
+      const errorMessage = handleSupabaseError(error);
+      toast.error(`Sikertelen regisztráció: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -212,8 +254,9 @@ const Signup = () => {
             <Button 
               type="submit" 
               className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
+              disabled={isLoading}
             >
-              Regisztráció
+              {isLoading ? "Regisztráció..." : "Regisztráció"}
             </Button>
             
             <div className="text-center mt-6">
