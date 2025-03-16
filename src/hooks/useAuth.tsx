@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 type AuthContextType = {
   session: Session | null;
@@ -9,6 +10,7 @@ type AuthContextType = {
   profile: any | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  updateLanguage: (language: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,7 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Kezdeti session lekérése
+    // Get initial session
     const initSession = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (error) {
@@ -30,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(data.session?.user ?? null);
         
         if (data.session?.user) {
-          // Profil adatok lekérése
+          // Get profile data
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -49,13 +51,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initSession();
 
-    // Auth változások figyelése
+    // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (event === 'SIGNED_IN' && currentSession?.user) {
-        // Új bejelentkezés esetén profil lekérése
+        // Get profile on new sign in
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -84,13 +86,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
+      toast.success('Sikeres kijelentkezés');
     } catch (error) {
-      console.error('Kijelentkezési hiba:', error);
+      console.error('Logout error:', error);
+      toast.error('Sikertelen kijelentkezés');
+    }
+  };
+  
+  const updateLanguage = async (language: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ language })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      setProfile(prev => ({...prev, language}));
+      toast.success('Nyelv sikeresen frissítve');
+    } catch (error) {
+      console.error('Language update error:', error);
+      toast.error('Sikertelen nyelv frissítés');
     }
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, signOut, updateLanguage }}>
       {children}
     </AuthContext.Provider>
   );

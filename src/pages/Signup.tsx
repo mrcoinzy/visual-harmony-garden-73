@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Lock, Mail, User, Check } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import Card from '@/components/Card';
 import { supabase } from '@/lib/supabase';
-import { DateDisplay } from '@/components/ui/date-display';
 
 const signupSchema = z.object({
   name: z.string().min(2, {
@@ -63,7 +63,7 @@ const Signup = () => {
     try {
       setIsLoading(true);
       
-      // 1. Regisztráljuk a felhasználót Supabase Auth segítségével
+      // 1. Register user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -77,7 +77,7 @@ const Signup = () => {
       if (authError) throw authError;
 
       if (authData?.user) {
-        // 2. Létrehozzuk a profil bejegyzést a profiles táblában
+        // 2. Create profile entry in profiles table
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -90,7 +90,19 @@ const Signup = () => {
 
         if (profileError) throw profileError;
         
-        // 3. Bejelentkeztetjük a felhasználót
+        // 3. Create initial finance entry
+        const { error: financeError } = await supabase
+          .from('finances')
+          .insert({
+            user_id: authData.user.id,
+            balance: 0,
+            month: new Date().toISOString().slice(0, 7), // Format as YYYY-MM
+            created_at: new Date().toISOString(),
+          });
+          
+        if (financeError) throw financeError;
+        
+        // 4. Log in the user
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
@@ -101,9 +113,9 @@ const Signup = () => {
         toast.success('Sikeres regisztráció és bejelentkezés!');
         navigate('/dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Sikertelen regisztráció. Kérjük, próbálja újra.');
+      toast.error(`Sikertelen regisztráció: ${error.message || 'Kérjük, próbálja újra.'}`);
     } finally {
       setIsLoading(false);
     }
