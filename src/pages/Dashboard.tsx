@@ -1,13 +1,38 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import SidebarComponent from '@/components/dashboard/SidebarComponent';
 import DashboardContent from '@/components/dashboard/DashboardContent';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activePage, setActivePage] = useState('dashboard');
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Ellenőrizzük, hogy a felhasználó be van-e jelentkezve
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error || !data.session) {
+          throw new Error('Nincs bejelentkezve');
+        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Auth error:', error);
+        toast.error('A művelet végrehajtásához bejelentkezés szükséges.');
+        navigate('/login');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
   
   // URL hash követése és helyes oldal beállítása
   useEffect(() => {
@@ -80,6 +105,14 @@ const Dashboard = () => {
       setActivePage('help');
     }
   };
+  
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-quickfix-dark">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-quickfix-yellow border-t-transparent"></div>
+      </div>
+    );
+  }
   
   return (
     <SidebarProvider>
