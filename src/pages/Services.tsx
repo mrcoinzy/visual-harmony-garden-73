@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, MapPin, Star, Filter, Search } from 'lucide-react';
+import { ShoppingBag, MapPin, Star, Filter, Search, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -110,7 +110,7 @@ const Services: React.FC<ServiceProps> = ({ onBack }) => {
           onClick={onBack} 
           className="mb-4"
         >
-          <Arrow-left className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Vissza
         </Button>
       )}
