@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, Check } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import Card from '@/components/Card';
-import { supabase, createUserProfile } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
 
 const signupSchema = z.object({
   name: z.string().min(2, {
@@ -45,7 +46,6 @@ const Signup = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -60,40 +60,14 @@ const Signup = () => {
 
   const onSubmit = async (data: SignupValues) => {
     try {
-      setIsLoading(true);
-      
-      // Regisztráció a Supabase autentikációval
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            name: data.name,
-          },
-        },
-      });
-      
-      if (authError) throw authError;
-      
-      if (authData?.user) {
-        // Felhasználói profil létrehozása a users táblában
-        const { error: profileError } = await createUserProfile(
-          authData.user.id,
-          data.name,
-          data.email,
-          data.acceptTerms
-        );
-        
-        if (profileError) throw profileError;
-      }
+      // Itt majd a tényleges regisztráció lesz
+      console.log(data);
       
       toast.success('Sikeres regisztráció!');
-      navigate('/dashboard');
-    } catch (error: any) {
-      toast.error(`Sikertelen regisztráció: ${error.message || 'Kérjük, próbálja újra.'}`);
+      navigate('/login');
+    } catch (error) {
+      toast.error('Sikertelen regisztráció. Kérjük, próbálja újra.');
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -238,9 +212,8 @@ const Signup = () => {
             <Button 
               type="submit" 
               className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
-              disabled={isLoading}
             >
-              {isLoading ? 'Regisztráció...' : 'Regisztráció'}
+              Regisztráció
             </Button>
             
             <div className="text-center mt-6">
