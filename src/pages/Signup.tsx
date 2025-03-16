@@ -1,11 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Lock, Mail, User, Check } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import Card from '@/components/Card';
-import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 const signupSchema = z.object({
   name: z.string().min(2, {
@@ -44,8 +44,9 @@ type SignupValues = z.infer<typeof signupSchema>;
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -60,14 +61,60 @@ const Signup = () => {
 
   const onSubmit = async (data: SignupValues) => {
     try {
-      // Itt majd a tényleges regisztráció lesz
-      console.log(data);
+      setIsLoading(true);
       
-      toast.success('Sikeres regisztráció!');
-      navigate('/login');
+      // Register with Supabase Auth
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.name,
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      // Create user profile in the custom table
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert([
+          { 
+            id: authData.user.id,
+            full_name: data.name, 
+            email: data.email,
+            password_hash: '**********', // This is just a placeholder, auth handles the real password
+            accepted_terms: data.acceptTerms
+          }
+        ]);
+
+      if (profileError) throw profileError;
+
+      // Create profile record
+      const { error: userProfileError } = await supabase
+        .from('profiles')
+        .insert([
+          { 
+            user_id: authData.user.id,
+            total_balance: 0,
+            unread_messages: 0,
+            ai_conversations_count: 0,
+            specialist_tasks_count: 0
+          }
+        ]);
+
+      if (userProfileError) throw userProfileError;
+      
+      toast.success('Sikeres regisztráció! Átirányítás a vezérlőpultra.');
+      
+      // In Supabase, the user is automatically logged in after signup
+      navigate('/dashboard');
     } catch (error) {
-      toast.error('Sikertelen regisztráció. Kérjük, próbálja újra.');
-      console.error(error);
+      console.error('Registration error:', error);
+      toast.error(error.message || 'Sikertelen regisztráció. Kérjük, próbálja újra.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -212,8 +259,16 @@ const Signup = () => {
             <Button 
               type="submit" 
               className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
+              disabled={isLoading}
             >
-              Regisztráció
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <span className="h-4 w-4 border-2 border-quickfix-dark border-r-transparent rounded-full animate-spin mr-2"></span>
+                  Regisztráció...
+                </span>
+              ) : (
+                "Regisztráció"
+              )}
             </Button>
             
             <div className="text-center mt-6">

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import Card from '@/components/Card';
-import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -33,7 +33,8 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = React.useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -45,14 +46,25 @@ const Login = () => {
 
   const onSubmit = async (data: LoginValues) => {
     try {
-      // Itt majd a tényleges bejelentkezési kérés lesz
-      console.log(data);
+      setIsLoading(true);
       
+      // Sign in with Supabase Auth
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
       toast.success('Sikeres bejelentkezés!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Sikertelen bejelentkezés. Kérjük, ellenőrizze adatait.');
-      console.error(error);
+      console.error('Login error:', error);
+      toast.error(error.message || 'Sikertelen bejelentkezés. Kérjük, ellenőrizze adatait.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -131,8 +143,16 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
+              disabled={isLoading}
             >
-              Bejelentkezés
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <span className="h-4 w-4 border-2 border-quickfix-dark border-r-transparent rounded-full animate-spin mr-2"></span>
+                  Bejelentkezés...
+                </span>
+              ) : (
+                "Bejelentkezés"
+              )}
             </Button>
             
             <div className="text-center mt-6">
