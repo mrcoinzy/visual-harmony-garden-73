@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import SidebarComponent from '@/components/dashboard/SidebarComponent';
 import DashboardContent from '@/components/dashboard/DashboardContent';
@@ -9,13 +9,16 @@ import { supabase } from '@/lib/supabase';
 
 const Dashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activePage, setActivePage] = useState('dashboard');
   const [userBalance, setUserBalance] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Fetch user balance on component mount
   useEffect(() => {
     const fetchUserBalance = async () => {
       try {
+        setIsLoading(true);
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
@@ -31,88 +34,64 @@ const Dashboard = () => {
           }
           
           if (data) {
-            setUserBalance(data.balance);
+            setUserBalance(data.balance || 0);
           }
         }
       } catch (error) {
         console.error('Failed to fetch user balance:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
     fetchUserBalance();
   }, []);
   
-  // URL hash követése és helyes oldal beállítása
+  // URL hash tracking and setting the correct page
   useEffect(() => {
     const hash = location.hash.replace('#', '');
     
     if (hash) {
-      // Dashboard route esetén
-      if (hash === 'dashboard') {
-        setActivePage('dashboard');
-      }
-      // Messages route esetén
-      else if (hash === 'messages') {
-        setActivePage('messages');
-      }
-      // History route esetén
-      else if (hash === 'history') {
-        setActivePage('history');
-      }
-      // Notifications route esetén
-      else if (hash === 'notifications') {
-        setActivePage('notifications');
-      }
-      // Services route esetén
-      else if (hash === 'services') {
-        setActivePage('services');
-      }
-      // Profile route esetén
-      else if (hash === 'profile') {
-        setActivePage('profile');
-      }
-      // Settings route esetén
-      else if (hash === 'settings') {
-        setActivePage('settings');
-      }
-      // Help route esetén
-      else if (hash === 'help' || hash === 'ai-help' || hash === 'professional-help') {
-        setActivePage('help');
-      }
-      // Ha ismeretlen, akkor a főoldal az alapértelmezett
-      else {
-        setActivePage('dashboard');
-      }
+      setActivePage(getPageFromHash(hash));
     } else {
-      // Ha nincs hash, a főoldal az alapértelmezett
       setActivePage('dashboard');
     }
   }, [location]);
   
-  // Navigációs kezelés
-  const handlePageChange = (page) => {
-    // Az URL hash frissítése
-    window.location.hash = page;
+  // Helper function to determine the active page from the hash
+  const getPageFromHash = (hash) => {
+    const validPages = [
+      'dashboard', 'messages', 'history', 'notifications', 
+      'services', 'profile', 'settings', 'help'
+    ];
     
-    // Az aktív oldal beállítása a megfelelő menüpont kiemeléséhez
-    if (page === 'dashboard') {
-      setActivePage('dashboard');
-    } else if (page === 'messages') {
-      setActivePage('messages');
-    } else if (page === 'history') {
-      setActivePage('history');
-    } else if (page === 'notifications') {
-      setActivePage('notifications');
-    } else if (page === 'services') {
-      setActivePage('services');
-    } else if (page === 'settings') {
-      setActivePage('settings');
-    } else if (page === 'profile') {
-      setActivePage('profile');
-    } else if (page === 'help' || page === 'ai-help' || page === 'professional-help') {
-      setActivePage('help');
+    // Special case for help subpages
+    if (hash === 'ai-help' || hash === 'professional-help') {
+      return 'help';
     }
+    
+    // If it's a valid page, return it, otherwise return dashboard
+    return validPages.includes(hash) ? hash : 'dashboard';
   };
+  
+  // Navigation handler
+  const handlePageChange = (page) => {
+    // Prevent unnecessary reloads by checking if we're already on the page
+    if (page === location.hash.replace('#', '')) {
+      return;
+    }
+    
+    // Update the URL hash without reloading the page
+    navigate(`#${page}`, { replace: true });
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen w-full bg-quickfix-dark items-center justify-center">
+        <div className="text-quickfix-yellow text-lg">Betöltés...</div>
+      </div>
+    );
+  }
   
   return (
     <SidebarProvider>

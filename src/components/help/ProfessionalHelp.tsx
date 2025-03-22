@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,10 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 interface ProfessionalHelpProps {
   onBack: () => void;
+  userBalance?: number;
+  setUserBalance?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const expertiseOptions = [
@@ -24,13 +27,14 @@ const expertiseOptions = [
   { value: 'other', label: 'Egyéb' },
 ];
 
-const ProfessionalHelp = ({ onBack }: ProfessionalHelpProps) => {
+const ProfessionalHelp = ({ onBack, userBalance = 0, setUserBalance }: ProfessionalHelpProps) => {
   const [problem, setProblem] = useState('');
   const [expertise, setExpertise] = useState('');
   const [payment, setPayment] = useState([10000]); // Initial value in HUF
   const [location, setLocation] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!problem || !expertise || !location) {
@@ -38,8 +42,42 @@ const ProfessionalHelp = ({ onBack }: ProfessionalHelpProps) => {
       return;
     }
     
-    // Submit logic would go here
-    toast.success('Segítségkérés elküldve! Hamarosan felvesszük Önnel a kapcsolatot.');
+    // Check if user has enough balance
+    if (userBalance < payment[0]) {
+      toast.error('Nincs elegendő egyenleg a szolgáltatás igénybevételéhez');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Submit logic would go here
+      // Update user's balance if the operation was successful
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ balance: userBalance - payment[0] })
+          .eq('id', user.id);
+          
+        if (error) {
+          throw error;
+        }
+        
+        // Update the balance in the state
+        if (setUserBalance) {
+          setUserBalance(prevBalance => prevBalance - payment[0]);
+        }
+        
+        toast.success('Segítségkérés elküldve! Hamarosan felvesszük Önnel a kapcsolatot.');
+      }
+    } catch (error) {
+      console.error('Error submitting help request:', error);
+      toast.error('Hiba történt a kérés feldolgozása során');
+    } finally {
+      setIsSubmitting(false);
+    }
     
     // For demo purposes, we're just logging the data
     console.log({
@@ -125,14 +163,21 @@ const ProfessionalHelp = ({ onBack }: ProfessionalHelpProps) => {
               <span>50,000 Ft</span>
             </div>
           </div>
+          
+          {userBalance < payment[0] && (
+            <div className="bg-red-900/30 border border-red-800 text-red-200 p-3 rounded-md text-sm">
+              Nincs elegendő egyenleg a szolgáltatás igénybevételéhez. Jelenlegi egyenleg: {userBalance} Ft
+            </div>
+          )}
         </div>
         
         <Button 
           type="submit" 
           className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90 animate-fade-in"
+          disabled={isSubmitting || userBalance < payment[0]}
         >
           <Send className="mr-2 h-4 w-4" />
-          Segítségkérés küldése
+          {isSubmitting ? 'Feldolgozás...' : 'Segítségkérés küldése'}
         </Button>
       </form>
     </div>
