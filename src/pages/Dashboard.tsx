@@ -4,10 +4,43 @@ import { useLocation } from 'react-router-dom';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import SidebarComponent from '@/components/dashboard/SidebarComponent';
 import DashboardContent from '@/components/dashboard/DashboardContent';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 const Dashboard = () => {
   const location = useLocation();
   const [activePage, setActivePage] = useState('dashboard');
+  const [userBalance, setUserBalance] = useState(0);
+  
+  // Fetch user balance on component mount
+  useEffect(() => {
+    const fetchUserBalance = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('balance')
+            .eq('id', user.id)
+            .single();
+            
+          if (error) {
+            console.error('Error fetching balance:', error);
+            return;
+          }
+          
+          if (data) {
+            setUserBalance(data.balance);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user balance:', error);
+      }
+    };
+    
+    fetchUserBalance();
+  }, []);
   
   // URL hash követése és helyes oldal beállítása
   useEffect(() => {
@@ -84,14 +117,16 @@ const Dashboard = () => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-quickfix-dark">
-        <SidebarComponent activePage={activePage} onNavigate={handlePageChange} />
+        <SidebarComponent activePage={activePage} onNavigate={handlePageChange} userBalance={userBalance} />
         <SidebarInset className="bg-quickfix-dark text-white">
           <div className="flex h-14 items-center border-b border-gray-800 px-4">
             <h1 className="ml-4 text-xl font-bold">QuickFix Dashboard</h1>
           </div>
           <DashboardContent 
             currentPage={location.hash.replace('#', '') || 'dashboard'} 
-            onPageChange={handlePageChange} 
+            onPageChange={handlePageChange}
+            userBalance={userBalance}
+            setUserBalance={setUserBalance}
           />
         </SidebarInset>
       </div>
