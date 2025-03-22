@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wrench, Search, Filter, Star, ExternalLink, Info } from 'lucide-react';
+import { Wrench, Search, Filter, Star, ExternalLink, Info, ShoppingBag } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
