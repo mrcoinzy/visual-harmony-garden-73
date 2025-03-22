@@ -14,9 +14,16 @@ import Settings from '@/pages/Settings';
 interface DashboardContentProps {
   currentPage: string;
   onPageChange: (page: string) => void;
+  userBalance: number; // Add userBalance prop
+  setUserBalance?: React.Dispatch<React.SetStateAction<number>>; // Add setUserBalance prop (optional)
 }
 
-const DashboardContent: React.FC<DashboardContentProps> = ({ currentPage, onPageChange }) => {
+const DashboardContent: React.FC<DashboardContentProps> = ({ 
+  currentPage, 
+  onPageChange, 
+  userBalance,
+  setUserBalance 
+}) => {
   // Oldalak tartalmának megjelenítése az aktuális oldal alapján
   const renderContent = () => {
     // Főoldal megjelenítése
@@ -115,7 +122,11 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ currentPage, onPage
     if (currentPage === 'professional-help') {
       return (
         <div className="animate-scale-in">
-          <ProfessionalHelp onBack={() => onPageChange('help')} />
+          <ProfessionalHelp 
+            onBack={() => onPageChange('help')} 
+            userBalance={userBalance}
+            setUserBalance={setUserBalance}
+          />
         </div>
       );
     }

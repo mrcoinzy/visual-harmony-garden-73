@@ -117,7 +117,11 @@ const Dashboard = () => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-quickfix-dark">
-        <SidebarComponent activePage={activePage} onNavigate={handlePageChange} userBalance={userBalance} />
+        <SidebarComponent 
+          activePage={activePage} 
+          onNavigate={handlePageChange} 
+          userBalance={userBalance} 
+        />
         <SidebarInset className="bg-quickfix-dark text-white">
           <div className="flex h-14 items-center border-b border-gray-800 px-4">
             <h1 className="ml-4 text-xl font-bold">QuickFix Dashboard</h1>

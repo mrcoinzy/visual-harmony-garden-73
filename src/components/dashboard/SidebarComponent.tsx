@@ -85,9 +85,10 @@ const settingsItems = [
 interface SidebarComponentProps {
   activePage: string;
   onNavigate: (id: string) => void;
+  userBalance: number; // Add userBalance prop to the interface
 }
 
-const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => {
+const SidebarComponent = ({ activePage, onNavigate, userBalance }: SidebarComponentProps) => {
   const navigate = useNavigate();
   
   // Valós alkalmazásban az authentikációs kontextusból jönne
@@ -120,6 +121,7 @@ const SidebarComponent = ({ activePage, onNavigate }: SidebarComponentProps) => 
           <div className="flex flex-col">
             <p className="font-medium text-sidebar-foreground">Szia, {user.name}!</p>
             <p className="text-xs text-sidebar-foreground/70">{user.email}</p>
+            <p className="text-xs text-sidebar-foreground/70">Egyenleg: {userBalance} Ft</p>
           </div>
         </div>
       </SidebarHeader>
