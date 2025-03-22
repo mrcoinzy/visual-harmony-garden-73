@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -17,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import Card from '@/components/Card';
+import { supabase, handleSupabaseError } from '@/lib/supabase';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({
@@ -28,6 +30,7 @@ type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -38,13 +41,23 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: ForgotPasswordValues) => {
     try {
-      console.log(data);
+      setIsLoading(true);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      
+      if (error) {
+        throw error;
+      }
       
       toast.success('Jelszó visszaállítási link elküldve az e-mail címére!');
       setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
-      toast.error('Hiba történt. Kérjük, próbálja újra.');
-      console.error(error);
+      const errorMessage = handleSupabaseError(error);
+      toast.error(`Hiba történt: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -88,8 +101,9 @@ const ForgotPassword = () => {
             <Button 
               type="submit" 
               className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
+              disabled={isLoading}
             >
-              Jelszó visszaállítása
+              {isLoading ? "Feldolgozás..." : "Jelszó visszaállítása"}
             </Button>
             
             <div className="text-center mt-6">
