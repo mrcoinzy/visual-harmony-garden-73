@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Wrench, Send } from 'lucide-react';
+import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProfessionalHelpProps {
   onBack: () => void;
@@ -79,7 +79,7 @@ const ProfessionalHelp = ({ onBack }: ProfessionalHelpProps) => {
           </div>
           
           <div>
-            <Label htmlFor="expertise" className="text-white">Milyen szakértelem szükséges?</Label>
+            <Label htmlFor="expertise" className="text-white">Milyen szakértelmet szükséges?</Label>
             <Select value={expertise} onValueChange={setExpertise}>
               <SelectTrigger id="expertise" className="bg-gray-800 border-gray-700 text-white focus:ring-quickfix-yellow focus:border-quickfix-yellow">
                 <SelectValue placeholder="Válasszon szakértelmet" />

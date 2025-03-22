@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -18,7 +17,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import Card from '@/components/Card';
-import { supabase, handleSupabaseError } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { handleSupabaseError } from '@/lib/supabase';
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -49,7 +49,6 @@ const Login = () => {
       setIsLoading(true);
       console.log('Attempting login with:', data.email);
       
-      // Attempt to sign in with Supabase
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,

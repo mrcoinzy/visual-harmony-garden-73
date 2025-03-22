@@ -11,7 +11,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from './pages/Dashboard';
-import { supabase } from "./lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 const queryClient = new QueryClient();

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -19,7 +18,8 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import Card from '@/components/Card';
-import { supabase, handleSupabaseError } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { handleSupabaseError } from '@/lib/supabase';
 
 const signupSchema = z.object({
   name: z.string().min(2, {
@@ -63,7 +63,6 @@ const Signup = () => {
     try {
       setIsLoading(true);
       
-      // Regisztráció a Supabase Auth szolgáltatással
       const { error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -80,7 +79,6 @@ const Signup = () => {
         throw signUpError;
       }
       
-      // Profil létrehozása a felhasználói adattáblában
       const { data: authUser } = await supabase.auth.getUser();
       
       if (authUser?.user?.id) {
@@ -103,7 +101,6 @@ const Signup = () => {
       }
       
       toast.success('Sikeres regisztráció!');
-      // Átirányítás a dashboard-ra bejelentkezés helyett, ahogy kérve volt
       navigate('/dashboard');
     } catch (error) {
       const errorMessage = handleSupabaseError(error);
