@@ -47,11 +47,15 @@ const Login = () => {
   const onSubmit = async (data: LoginValues) => {
     try {
       setIsLoading(true);
+      console.log('Attempting login with:', data.email);
       
-      const { error } = await supabase.auth.signInWithPassword({
+      // Attempt to sign in with Supabase
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
+      
+      console.log('Login response:', authData ? 'success' : 'failed', error);
       
       if (error) {
         throw error;
@@ -61,6 +65,7 @@ const Login = () => {
       navigate('/dashboard');
     } catch (error) {
       const errorMessage = handleSupabaseError(error);
+      console.error('Login error details:', error);
       toast.error(`Sikertelen bejelentkezés: ${errorMessage}`);
     } finally {
       setIsLoading(false);
