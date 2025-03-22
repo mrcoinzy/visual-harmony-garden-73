@@ -18,6 +18,10 @@ export const handleSupabaseError = (error: any) => {
     return 'Az e-mail cím nincs megerősítve.';
   }
   
+  if (error?.message?.includes('User already registered')) {
+    return 'Ez az e-mail cím már regisztrálva van.';
+  }
+  
   return error.message || 'Ismeretlen hiba történt';
 };
 

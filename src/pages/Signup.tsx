@@ -79,27 +79,6 @@ const Signup = () => {
         throw signUpError;
       }
       
-      const { data: authUser } = await supabase.auth.getUser();
-      
-      if (authUser?.user?.id) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            { 
-              id: authUser.user.id,
-              full_name: data.name,
-              balance: 0,
-              messages_count: 0,
-              ai_conversations_count: 0,
-              professional_tasks_count: 0,
-            }
-          ]);
-          
-        if (profileError) {
-          console.error('Profil létrehozási hiba:', profileError);
-        }
-      }
-      
       toast.success('Sikeres regisztráció!');
       navigate('/dashboard');
     } catch (error) {
@@ -272,3 +251,4 @@ const Signup = () => {
 };
 
 export default Signup;
+
