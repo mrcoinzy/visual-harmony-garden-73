@@ -61,11 +61,46 @@ const Login = () => {
         throw error;
       }
       
+      // Ensure profile exists
+      if (authData.user) {
+        try {
+          // Check if profile exists
+          const { data: profileExists, error: profileCheckError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', authData.user.id)
+            .single();
+          
+          if (profileCheckError && profileCheckError.code === 'PGRST116') {
+            // Profile doesn't exist, create one
+            console.log("Creating new profile for user:", authData.user.id);
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([
+                { 
+                  id: authData.user.id, 
+                  balance: 0,
+                  email: authData.user.email,
+                  created_at: new Date().toISOString()
+                }
+              ]);
+            
+            if (insertError) {
+              console.error("Error creating profile:", insertError);
+              toast.error('Sikertelen profil létrehozás. Kérjük, próbálja újra.');
+              return;
+            }
+          }
+        } catch (profileError) {
+          console.error("Error handling profile creation:", profileError);
+          toast.error('Sikertelen profil ellenőrzés. Kérjük, próbálja újra.');
+          return;
+        }
+      }
+      
       toast.success('Sikeres bejelentkezés!');
-      // Delay navigation slightly to allow the auth state to properly update
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 500);
+      // Navigate to dashboard after profile is confirmed
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       const errorMessage = handleSupabaseError(error);
       console.error('Login error details:', error);

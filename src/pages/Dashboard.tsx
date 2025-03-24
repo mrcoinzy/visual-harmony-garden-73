@@ -14,10 +14,11 @@ const Dashboard = () => {
   const [userBalance, setUserBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  const [profileExists, setProfileExists] = useState(false);
   
   // Fetch user balance on component mount
   useEffect(() => {
-    const fetchUserBalance = async () => {
+    const fetchUserData = async () => {
       try {
         setIsLoading(true);
         console.log("Fetching user balance...");
@@ -26,6 +27,7 @@ const Dashboard = () => {
         
         if (!user) {
           console.log("No user found in auth state");
+          navigate('/login', { replace: true });
           return;
         }
         
@@ -43,31 +45,48 @@ const Dashboard = () => {
             console.log("No profile found, creating one");
             const { error: insertError } = await supabase
               .from('profiles')
-              .insert([{ id: user.id, balance: 0 }]);
+              .insert([
+                { 
+                  id: user.id, 
+                  balance: 0,
+                  email: user.email,
+                  created_at: new Date().toISOString()
+                }
+              ]);
               
             if (insertError) {
               console.error('Error creating profile:', insertError);
+              toast.error('Nem sikerült létrehozni a profilt. Kérjük, jelentkezzen be újra.');
+              // Logout and redirect to login
+              await supabase.auth.signOut();
+              navigate('/login', { replace: true });
+              return;
             } else {
               setUserBalance(0);
+              setProfileExists(true);
             }
+          } else {
+            toast.error('Nem sikerült betölteni a profil adatokat. Kérjük, próbálja újra később.');
+            return;
           }
-          return;
         }
         
         if (data) {
           console.log("Profile data:", data);
           setUserBalance(data.balance || 0);
+          setProfileExists(true);
         }
       } catch (error) {
         console.error('Failed to fetch user balance:', error);
+        toast.error('Hiba történt az adatok betöltése közben. Kérjük, próbálja újra később.');
       } finally {
         setIsLoading(false);
         setInitialized(true);
       }
     };
     
-    fetchUserBalance();
-  }, []);
+    fetchUserData();
+  }, [navigate]);
   
   // URL hash tracking and setting the correct page
   useEffect(() => {
@@ -113,6 +132,24 @@ const Dashboard = () => {
     return (
       <div className="flex min-h-screen w-full bg-quickfix-dark items-center justify-center">
         <div className="text-quickfix-yellow text-lg">Betöltés...</div>
+      </div>
+    );
+  }
+  
+  if (!profileExists && initialized) {
+    return (
+      <div className="flex min-h-screen w-full bg-quickfix-dark items-center justify-center flex-col">
+        <div className="text-quickfix-yellow text-xl mb-4">Profil hiba</div>
+        <div className="text-white mb-6">Nem sikerült elérni a profilját. Kérjük, jelentkezzen be újra.</div>
+        <button 
+          onClick={async () => {
+            await supabase.auth.signOut();
+            navigate('/login', { replace: true });
+          }}
+          className="px-4 py-2 bg-quickfix-yellow text-quickfix-dark rounded-xl hover:bg-quickfix-yellow/90"
+        >
+          Bejelentkezés
+        </button>
       </div>
     );
   }
