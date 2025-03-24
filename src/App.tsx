@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -44,7 +43,7 @@ function App() {
               .single();
             
             if (profileCheckError && profileCheckError.code === 'PGRST116') {
-              // Profile doesn't exist, create one
+              // Profile doesn't exist, create one - only include fields that exist in the table
               console.log("Creating new profile for user:", updatedSession.user.id);
               const { error: insertError } = await supabase
                 .from('profiles')
@@ -52,7 +51,6 @@ function App() {
                   { 
                     id: updatedSession.user.id, 
                     balance: 0,
-                    email: updatedSession.user.email,
                     created_at: new Date().toISOString()
                   }
                 ]);
@@ -91,7 +89,7 @@ function App() {
               .single();
             
             if (profileCheckError && profileCheckError.code === 'PGRST116') {
-              // Profile doesn't exist, create one
+              // Profile doesn't exist, create one - only include fields that exist in the table
               console.log("Creating new profile for user:", currentSession.user.id);
               const { error: insertError } = await supabase
                 .from('profiles')
@@ -99,7 +97,6 @@ function App() {
                   { 
                     id: currentSession.user.id, 
                     balance: 0,
-                    email: currentSession.user.email,
                     created_at: new Date().toISOString()
                   }
                 ]);

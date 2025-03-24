@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -72,7 +71,7 @@ const Login = () => {
             .single();
           
           if (profileCheckError && profileCheckError.code === 'PGRST116') {
-            // Profile doesn't exist, create one
+            // Profile doesn't exist, create one - only include fields that exist in the table
             console.log("Creating new profile for user:", authData.user.id);
             const { error: insertError } = await supabase
               .from('profiles')
@@ -80,7 +79,6 @@ const Login = () => {
                 { 
                   id: authData.user.id, 
                   balance: 0,
-                  email: authData.user.email,
                   created_at: new Date().toISOString()
                 }
               ]);

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -77,6 +78,29 @@ const Signup = () => {
       
       if (signUpError) {
         throw signUpError;
+      }
+      
+      // Create a profile for the new user - only include fields that exist in the table
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              { 
+                id: user.id, 
+                balance: 0,
+                created_at: new Date().toISOString()
+              }
+            ]);
+            
+          if (profileError) {
+            console.error("Error creating profile:", profileError);
+          }
+        }
+      } catch (profileError) {
+        console.error("Error creating profile:", profileError);
       }
       
       toast.success('Sikeres regisztráció!');
@@ -251,4 +275,3 @@ const Signup = () => {
 };
 
 export default Signup;
-
