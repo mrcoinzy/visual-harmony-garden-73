@@ -195,10 +195,13 @@ const ProfessionalHelp: React.FC<ProfessionalHelpProps> = ({
       </form>
       
       <AddBalanceModal 
-        isOpen={isAddBalanceOpen}
-        onClose={() => setIsAddBalanceOpen(false)}
-        currentBalance={userBalance}
-        onBalanceUpdate={setUserBalance}
+        open={isAddBalanceOpen}
+        onOpenChange={() => setIsAddBalanceOpen(false)}
+        onBalanceAdded={(newBalance) => {
+          if (setUserBalance) {
+            setUserBalance(newBalance);
+          }
+        }}
       />
     </div>
   );
