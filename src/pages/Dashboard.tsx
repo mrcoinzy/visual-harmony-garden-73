@@ -13,34 +13,56 @@ const Dashboard = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const [userBalance, setUserBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   
   // Fetch user balance on component mount
   useEffect(() => {
     const fetchUserBalance = async () => {
       try {
         setIsLoading(true);
+        console.log("Fetching user balance...");
+        
         const { data: { user } } = await supabase.auth.getUser();
         
-        if (user) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('balance')
-            .eq('id', user.id)
-            .single();
-            
-          if (error) {
-            console.error('Error fetching balance:', error);
-            return;
-          }
+        if (!user) {
+          console.log("No user found in auth state");
+          return;
+        }
+        
+        console.log("User found, fetching profile", user.id);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('balance')
+          .eq('id', user.id)
+          .maybeSingle();
           
-          if (data) {
-            setUserBalance(data.balance || 0);
+        if (error) {
+          console.error('Error fetching balance:', error);
+          // If there's no profile, create one
+          if (error.code === 'PGRST116') {
+            console.log("No profile found, creating one");
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([{ id: user.id, balance: 0 }]);
+              
+            if (insertError) {
+              console.error('Error creating profile:', insertError);
+            } else {
+              setUserBalance(0);
+            }
           }
+          return;
+        }
+        
+        if (data) {
+          console.log("Profile data:", data);
+          setUserBalance(data.balance || 0);
         }
       } catch (error) {
         console.error('Failed to fetch user balance:', error);
       } finally {
         setIsLoading(false);
+        setInitialized(true);
       }
     };
     
@@ -49,6 +71,8 @@ const Dashboard = () => {
   
   // URL hash tracking and setting the correct page
   useEffect(() => {
+    if (!initialized) return;
+    
     const hash = location.hash.replace('#', '');
     
     if (hash) {
@@ -56,7 +80,7 @@ const Dashboard = () => {
     } else {
       setActivePage('dashboard');
     }
-  }, [location]);
+  }, [location, initialized]);
   
   // Helper function to determine the active page from the hash
   const getPageFromHash = (hash) => {

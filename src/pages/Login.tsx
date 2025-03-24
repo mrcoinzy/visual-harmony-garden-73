@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -17,7 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import Card from '@/components/Card';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { handleSupabaseError } from '@/lib/supabase';
 
 const loginSchema = z.object({
@@ -61,7 +62,10 @@ const Login = () => {
       }
       
       toast.success('Sikeres bejelentkezés!');
-      navigate('/dashboard');
+      // Delay navigation slightly to allow the auth state to properly update
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 500);
     } catch (error) {
       const errorMessage = handleSupabaseError(error);
       console.error('Login error details:', error);
