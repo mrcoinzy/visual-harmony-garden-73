@@ -11,16 +11,20 @@ export const handleSupabaseError = (error: any) => {
     return 'Hálózati kapcsolat hiba. Kérjük, ellenőrizze az internetkapcsolatot.';
   }
   
-  if (error?.message?.includes('Invalid login')) {
-    return 'Érvénytelen bejelentkezési adatok.';
+  if (error?.message?.includes('Invalid login') || error?.message?.includes('Invalid email or password')) {
+    return 'Érvénytelen e-mail cím vagy jelszó.';
   }
   
   if (error?.message?.includes('Email not confirmed')) {
-    return 'Az e-mail cím nincs megerősítve.';
+    return 'Az e-mail cím nincs megerősítve. Kérjük, ellenőrizze postaládáját.';
   }
   
   if (error?.message?.includes('User already registered')) {
     return 'Ez az e-mail cím már regisztrálva van.';
+  }
+  
+  if (error?.code === 'PGRST116') {
+    return 'A kért adat nem található.';
   }
   
   return error.message || 'Ismeretlen hiba történt';
@@ -30,7 +34,13 @@ export const handleSupabaseError = (error: any) => {
 export const processCheckout = async (amount: number, description: string) => {
   try {
     // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error('Error getting user:', userError);
+      toast.error('A felhasználó adatainak lekérése sikertelen!');
+      return { success: false, error: userError };
+    }
     
     if (!user) {
       toast.error('A fizetéshez be kell jelentkezni!');
@@ -42,16 +52,33 @@ export const processCheckout = async (amount: number, description: string) => {
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
       
     if (profileError) {
       console.error('Error fetching profile:', profileError);
+      
+      // If there's no profile, create one
+      if (profileError.code === 'PGRST116') {
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert([{ id: user.id, balance: 0 }]);
+          
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          toast.error('Nem sikerült létrehozni a profilt!');
+          return { success: false, error: insertError };
+        }
+        
+        toast.error('Nincs elegendő egyenleg a fizetéshez!');
+        return { success: false, error: 'Insufficient balance' };
+      }
+      
       toast.error('Nem sikerült ellenőrizni a profilt!');
       return { success: false, error: profileError };
     }
     
     // Check if user has enough balance
-    if (profile.balance < amount) {
+    if (!profile || profile.balance < amount) {
       toast.error('Nincs elegendő egyenleg a fizetéshez!');
       return { success: false, error: 'Insufficient balance' };
     }

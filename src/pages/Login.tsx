@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,8 +34,18 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  
+  // Check for error state passed from redirect
+  React.useEffect(() => {
+    if (location.state?.error) {
+      toast.error(`Bejelentkezési hiba: ${location.state.error}`);
+      // Clear the error from location state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
   
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -61,10 +71,40 @@ const Login = () => {
         throw error;
       }
       
+      // Check if the user has a profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+      
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Profile check error:', profileError);
+        throw new Error('Failed to retrieve your profile');
+      }
+      
+      // If no profile exists, create one
+      if (!profileData) {
+        console.log('No profile found, creating one for:', authData.user.id);
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert([{ 
+            id: authData.user.id, 
+            balance: 0,
+            full_name: authData.user.user_metadata?.full_name || ''
+          }]);
+          
+        if (createError) {
+          console.error('Profile creation error:', createError);
+          throw new Error('Failed to create your profile');
+        }
+      }
+      
       toast.success('Sikeres bejelentkezés!');
-      // Delay navigation slightly to allow the auth state to properly update
+      
+      // Delay navigation slightly to allow auth state to update
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       }, 500);
     } catch (error) {
       const errorMessage = handleSupabaseError(error);
