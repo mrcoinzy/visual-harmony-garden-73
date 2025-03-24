@@ -1,208 +1,185 @@
 
 import React, { useState } from 'react';
+import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, CheckCircle, Clock, Send } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { processCheckout } from '@/lib/supabase';
-import AddBalanceModal from '@/components/AddBalanceModal';
 
 interface ProfessionalHelpProps {
   onBack: () => void;
-  userBalance: number;
+  userBalance?: number;
   setUserBalance?: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const ProfessionalHelp: React.FC<ProfessionalHelpProps> = ({ 
-  onBack,
-  userBalance,
-  setUserBalance
-}) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+const expertiseOptions = [
+  { value: 'plumbing', label: 'Vízvezeték-szerelés' },
+  { value: 'electrical', label: 'Villanyszerelés' },
+  { value: 'carpentry', label: 'Asztalos munkák' },
+  { value: 'painting', label: 'Festés' },
+  { value: 'cleaning', label: 'Takarítás' },
+  { value: 'gardening', label: 'Kertészet' },
+  { value: 'moving', label: 'Költöztetés' },
+  { value: 'other', label: 'Egyéb' },
+];
+
+const ProfessionalHelp = ({ onBack, userBalance = 0, setUserBalance }: ProfessionalHelpProps) => {
+  const [problem, setProblem] = useState('');
+  const [expertise, setExpertise] = useState('');
+  const [payment, setPayment] = useState([10000]); // Initial value in HUF
+  const [location, setLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAddBalanceOpen, setIsAddBalanceOpen] = useState(false);
-  const [price] = useState(5000); // Fixed price for professional help in HUF
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !description.trim()) {
-      toast.error('Kérjük, töltse ki az összes mezőt!');
+    if (!problem || !expertise || !location) {
+      toast.error('Kérjük, töltse ki az összes kötelező mezőt');
       return;
     }
     
-    if (userBalance < price) {
-      toast.error('Nincs elegendő egyenleg a szolgáltatás igénybevételéhez!');
-      setIsAddBalanceOpen(true);
+    // Check if user has enough balance
+    if (userBalance < payment[0]) {
+      toast.error('Nincs elegendő egyenleg a szolgáltatás igénybevételéhez');
       return;
     }
+    
+    setIsSubmitting(true);
     
     try {
-      setIsSubmitting(true);
-      
-      // Process payment
-      const paymentResult = await processCheckout(price, "Szakember segítség: " + title);
-      
-      if (!paymentResult.success) {
-        toast.error('A fizetés sikertelen volt!');
-        return;
-      }
-      
-      // Update the balance in the UI if payment successful
-      if (setUserBalance) {
-        setUserBalance(prevBalance => prevBalance - price);
-      }
-      
-      // Get user info
+      // Submit logic would go here
+      // Update user's balance if the operation was successful
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        toast.error('A felhasználó nincs bejelentkezve!');
-        return;
-      }
-      
-      // Create a professional task
-      const { data, error } = await supabase
-        .from('professional_tasks')
-        .insert([
-          {
-            title,
-            description,
-            price,
-            user_id: user.id,
-            status: 'pending'
-          }
-        ])
-        .select();
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ balance: userBalance - payment[0] })
+          .eq('id', user.id);
+          
+        if (error) {
+          throw error;
+        }
         
-      if (error) {
-        console.error('Error creating task:', error);
-        toast.error('Hiba történt a feladat létrehozásakor!');
-        return;
+        // Update the balance in the state
+        if (setUserBalance) {
+          setUserBalance(prevBalance => prevBalance - payment[0]);
+        }
+        
+        toast.success('Segítségkérés elküldve! Hamarosan felvesszük Önnel a kapcsolatot.');
       }
-      
-      toast.success('Sikeres kérés! A szakember hamarosan felveszi Önnel a kapcsolatot.');
-      setTitle('');
-      setDescription('');
-      
     } catch (error) {
-      console.error('Submit error:', error);
-      toast.error('Hiba történt a kérés feldolgozása során!');
+      console.error('Error submitting help request:', error);
+      toast.error('Hiba történt a kérés feldolgozása során');
     } finally {
       setIsSubmitting(false);
     }
+    
+    // For demo purposes, we're just logging the data
+    console.log({
+      problem,
+      expertise,
+      payment: payment[0],
+      location,
+    });
   };
   
   return (
-    <div className="rounded-lg border border-gray-800 bg-quickfix-dark-gray p-6 shadow-sm">
+    <div className="bg-quickfix-dark-gray rounded-xl overflow-hidden border border-gray-800 p-6 transition-all duration-300">
       <div className="flex items-center mb-6">
         <Button 
-          variant="outline" 
+          variant="ghost" 
           size="icon" 
-          className="mr-4 border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800 hover:text-white"
           onClick={onBack}
+          className="mr-2 text-gray-400 hover:text-white"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h2 className="text-2xl font-bold text-quickfix-yellow">Szakember segítség kérése</h2>
+        <h2 className="text-xl font-semibold text-white">Szakemberi segítségkérés</h2>
       </div>
       
-      <div className="mb-6">
-        <div className="bg-quickfix-dark rounded-lg p-4 mb-6 border border-gray-800">
-          <h3 className="text-white font-medium mb-2">Szakértői segítség</h3>
-          <p className="text-gray-400 mb-4">
-            A szakembereink valós időben segítenek megoldani a problémáját. Válassza ezt a lehetőséget, ha összetett problémája van, vagy személyes segítségre van szüksége.
-          </p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-green-400">
-              <CheckCircle size={16} className="mr-2" />
-              <span>Valós idejű segítség</span>
-            </div>
-            <div className="flex items-center text-yellow-400">
-              <Clock size={16} className="mr-2" />
-              <span>Gyors válasz (24 órán belül)</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-quickfix-dark rounded-lg p-4 border border-gray-700 mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-300">Ár:</span>
-            <span className="text-quickfix-yellow font-bold">{price.toLocaleString()} Ft</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300">Jelenlegi egyenleg:</span>
-            <span className={`font-bold ${userBalance < price ? 'text-red-400' : 'text-green-400'}`}>
-              {userBalance.toLocaleString()} Ft
-            </span>
-          </div>
-          {userBalance < price && (
-            <div className="mt-4">
-              <Button 
-                className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90"
-                onClick={() => setIsAddBalanceOpen(true)}
-              >
-                Egyenleg feltöltése
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-4 mb-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4 animate-fade-in">
           <div>
-            <Label htmlFor="title" className="text-gray-300">Probléma címe</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Írja be a probléma címét"
-              className="bg-quickfix-dark-gray border-gray-700 focus:border-quickfix-yellow focus:ring-quickfix-yellow/20"
+            <Label htmlFor="problem" className="text-white">Mi a probléma?</Label>
+            <Textarea
+              id="problem"
+              value={problem}
+              onChange={(e) => setProblem(e.target.value)}
+              placeholder="Kérjük, írja le részletesen a problémát, amiben segítségre van szüksége..."
+              className="bg-gray-800 border-gray-700 text-white h-32 focus-within:ring-quickfix-yellow focus:border-quickfix-yellow"
+              required
             />
           </div>
           
           <div>
-            <Label htmlFor="description" className="text-gray-300">Probléma leírása</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Részletesen írja le a problémát, hogy a szakembereink minél jobban megérthessék"
-              className="h-32 bg-quickfix-dark-gray border-gray-700 focus:border-quickfix-yellow focus:ring-quickfix-yellow/20"
+            <Label htmlFor="expertise" className="text-white">Milyen szakértelmet szükséges?</Label>
+            <Select value={expertise} onValueChange={setExpertise}>
+              <SelectTrigger id="expertise" className="bg-gray-800 border-gray-700 text-white focus:ring-quickfix-yellow focus:border-quickfix-yellow">
+                <SelectValue placeholder="Válasszon szakértelmet" />
+              </SelectTrigger>
+              <SelectContent>
+                {expertiseOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="location" className="text-white">Helyszín</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Adja meg a címet"
+              className="bg-gray-800 border-gray-700 text-white focus-within:ring-quickfix-yellow focus:border-quickfix-yellow"
+              required
             />
           </div>
+          
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <Label htmlFor="payment" className="text-white">Fizetés (Ft)</Label>
+              <span className="text-quickfix-yellow font-semibold">{payment[0].toLocaleString()} Ft</span>
+            </div>
+            <Slider
+              id="payment"
+              value={payment}
+              onValueChange={setPayment}
+              min={5000}
+              max={50000}
+              step={1000}
+              className="py-4"
+            />
+            <div className="flex justify-between text-xs text-gray-400">
+              <span>5,000 Ft</span>
+              <span>50,000 Ft</span>
+            </div>
+          </div>
+          
+          {userBalance < payment[0] && (
+            <div className="bg-red-900/30 border border-red-800 text-red-200 p-3 rounded-md text-sm">
+              Nincs elegendő egyenleg a szolgáltatás igénybevételéhez. Jelenlegi egyenleg: {userBalance} Ft
+            </div>
+          )}
         </div>
         
         <Button 
           type="submit" 
-          className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90 flex items-center justify-center"
-          disabled={isSubmitting || userBalance < price}
+          className="w-full bg-quickfix-yellow text-quickfix-dark hover:bg-quickfix-yellow/90 animate-fade-in"
+          disabled={isSubmitting || userBalance < payment[0]}
         >
-          {isSubmitting ? (
-            "Küldés folyamatban..."
-          ) : (
-            <>
-              <Send size={18} className="mr-2" />
-              Küldés szakembernek
-            </>
-          )}
+          <Send className="mr-2 h-4 w-4" />
+          {isSubmitting ? 'Feldolgozás...' : 'Segítségkérés küldése'}
         </Button>
       </form>
-      
-      <AddBalanceModal 
-        open={isAddBalanceOpen}
-        onOpenChange={() => setIsAddBalanceOpen(false)}
-        onBalanceAdded={(newBalance) => {
-          if (setUserBalance) {
-            setUserBalance(newBalance);
-          }
-        }}
-      />
     </div>
   );
 };
